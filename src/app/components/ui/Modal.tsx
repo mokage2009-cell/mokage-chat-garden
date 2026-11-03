@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, type ReactNode } from "react";
+import { X } from "lucide-react";
 
 type ModalProps = {
   label: string;
@@ -10,10 +10,10 @@ type ModalProps = {
 export default function Modal({ label, onClose, children }: ModalProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === "Escape") onClose();
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
   return (

@@ -1,8 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
-import HobbyTagInput from '@/app/components/profile/HobbyTagInput';
-import ProfileImageField from '@/app/components/profile/ProfileImageField';
-import { useObjectUrl } from '@/app/hooks/useObjectUrl';
+import { useState, type FormEvent, type ReactNode } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import HobbyTagInput from "@/app/components/profile/HobbyTagInput";
+import ProfileImageField from "@/app/components/profile/ProfileImageField";
+import { useObjectUrl } from "@/app/hooks/useObjectUrl";
 import {
   GENDER_OPTIONS,
   PROFILE_LIMITS,
@@ -12,7 +12,7 @@ import {
   type Gender,
   type Profile,
   type ProfileDraft,
-} from '@/app/lib/profile';
+} from "@/app/lib/profile";
 
 type ProfileEditFormProps = {
   profile: Profile;
@@ -21,14 +21,20 @@ type ProfileEditFormProps = {
 };
 
 function validateDraft(draft: ProfileDraft): string | null {
-  if (draft.displayName.length < 1 || Array.from(draft.displayName).length > PROFILE_LIMITS.displayNameMax) {
+  if (
+    draft.displayName.length < 1 ||
+    Array.from(draft.displayName).length > PROFILE_LIMITS.displayNameMax
+  ) {
     return `名前は1〜${PROFILE_LIMITS.displayNameMax}文字で入力してください`;
   }
   if (Array.from(draft.bio).length > PROFILE_LIMITS.bioMax) {
     return `一言は${PROFILE_LIMITS.bioMax}文字以内で入力してください`;
   }
-  if (draft.age !== null && (draft.age < PROFILE_LIMITS.ageMin || draft.age > PROFILE_LIMITS.ageMax)) {
-    return '年齢は0〜150の範囲で選んでください';
+  if (
+    draft.age !== null &&
+    (draft.age < PROFILE_LIMITS.ageMin || draft.age > PROFILE_LIMITS.ageMax)
+  ) {
+    return "年齢は0〜150の範囲で選んでください";
   }
   if (draft.hobbies.length > PROFILE_LIMITS.hobbyMax) {
     return `趣味は${PROFILE_LIMITS.hobbyMax}個まで設定できます`;
@@ -39,7 +45,7 @@ function validateDraft(draft: ProfileDraft): string | null {
 export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileEditFormProps) {
   const [displayName, setDisplayName] = useState(profile.displayName);
   const [bio, setBio] = useState(profile.bio);
-  const [ageInput, setAgeInput] = useState(profile.age === null ? '' : String(profile.age));
+  const [ageInput, setAgeInput] = useState(profile.age === null ? "" : String(profile.age));
   const [gender, setGender] = useState<Gender>(profile.gender);
   const [hobbies, setHobbies] = useState<string[]>(profile.hobbies);
   const [headerFile, setHeaderFile] = useState<File | null>(null);
@@ -51,14 +57,14 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
   const avatarPreview = useObjectUrl(avatarFile);
   const bioLength = Array.from(bio).length;
 
-  const handleImageSelect = (kind: 'header' | 'avatar', file: File) => {
+  const handleImageSelect = (kind: "header" | "avatar", file: File) => {
     const imageError = validateImageFile(file);
     if (imageError) {
       setError(imageError);
       return;
     }
     setError(null);
-    if (kind === 'header') setHeaderFile(file);
+    if (kind === "header") setHeaderFile(file);
     else setAvatarFile(file);
   };
 
@@ -68,7 +74,7 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
     const draft: ProfileDraft = {
       displayName: displayName.trim(),
       bio: bio.trim(),
-      age: ageInput === '' ? null : Number(ageInput),
+      age: ageInput === "" ? null : Number(ageInput),
       gender,
       hobbies,
       headerImageUrl: profile.headerImageUrl,
@@ -85,10 +91,10 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
     setIsSaving(true);
     try {
       const headerImageUrl = headerFile
-        ? await uploadProfileImage(profile.loginId, 'header', headerFile)
+        ? await uploadProfileImage(profile.loginId, "header", headerFile)
         : profile.headerImageUrl;
       const avatarImageUrl = avatarFile
-        ? await uploadProfileImage(profile.loginId, 'avatar', avatarFile)
+        ? await uploadProfileImage(profile.loginId, "avatar", avatarFile)
         : profile.avatarImageUrl;
 
       const saved = await saveProfile(profile.loginId, {
@@ -98,7 +104,7 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
       });
       onSaved(saved);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'プロフィールの保存に失敗しました');
+      setError(err instanceof Error ? err.message : "プロフィールの保存に失敗しました");
       setIsSaving(false);
     }
   };
@@ -124,18 +130,21 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
               label="ヘッダー画像"
               shape="wide"
               previewUrl={headerPreview ?? profile.headerImageUrl}
-              onSelect={(file) => handleImageSelect('header', file)}
+              onSelect={(file) => handleImageSelect("header", file)}
             />
             <ProfileImageField
               label="アイコン画像"
               shape="round"
               previewUrl={avatarPreview ?? profile.avatarImageUrl}
-              onSelect={(file) => handleImageSelect('avatar', file)}
+              onSelect={(file) => handleImageSelect("avatar", file)}
             />
           </Section>
 
           <Section title="基本情報">
-            <Field label="名前" hint={`${Array.from(displayName).length}/${PROFILE_LIMITS.displayNameMax}`}>
+            <Field
+              label="名前"
+              hint={`${Array.from(displayName).length}/${PROFILE_LIMITS.displayNameMax}`}
+            >
               <input
                 type="text"
                 value={displayName}
@@ -152,11 +161,14 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
                 className="w-full rounded-2xl bg-slate-100 px-4 py-3 text-slate-900 transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
                 <option value="">未設定</option>
-                {Array.from({ length: PROFILE_LIMITS.ageMax - PROFILE_LIMITS.ageMin + 1 }, (_, index) => (
-                  <option key={index} value={PROFILE_LIMITS.ageMin + index}>
-                    {PROFILE_LIMITS.ageMin + index}歳
-                  </option>
-                ))}
+                {Array.from(
+                  { length: PROFILE_LIMITS.ageMax - PROFILE_LIMITS.ageMin + 1 },
+                  (_, index) => (
+                    <option key={index} value={PROFILE_LIMITS.ageMin + index}>
+                      {PROFILE_LIMITS.ageMin + index}歳
+                    </option>
+                  ),
+                )}
               </select>
             </Field>
 
@@ -173,8 +185,8 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
                       onClick={() => setGender(option.value)}
                       className={`rounded-2xl py-3 text-sm font-semibold transition active:scale-95 ${
                         isSelected
-                          ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                          ? "bg-cyan-600 text-white shadow-md shadow-cyan-600/20"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                       }`}
                     >
                       {option.label}
@@ -226,7 +238,7 @@ export default function ProfileEditForm({ profile, onCancel, onSaved }: ProfileE
             className="flex flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-sky-600 py-3 font-bold text-white shadow-lg shadow-cyan-600/30 transition hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSaving ? '保存中…' : '保存する'}
+            {isSaving ? "保存中…" : "保存する"}
           </button>
         </div>
       </div>

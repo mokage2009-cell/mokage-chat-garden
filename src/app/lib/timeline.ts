@@ -1,4 +1,4 @@
-import { supabase } from '@/app/lib/supabase';
+import { supabase } from "@/app/lib/supabase";
 
 export const TIMELINE_LIMITS = { titleMax: 40, messageMax: 500 } as const;
 
@@ -35,11 +35,13 @@ function toTimelinePost(row: TimelinePostRow): TimelinePost {
 
 export async function fetchTimelinePosts(): Promise<TimelinePost[]> {
   const { data, error } = await supabase
-    .from('timeline_posts')
-    .select('id, author_login_id, title, message, created_at, author:profiles!author_login_id(display_name, avatar_image_url)')
-    .order('created_at', { ascending: false })
+    .from("timeline_posts")
+    .select(
+      "id, author_login_id, title, message, created_at, author:profiles!author_login_id(display_name, avatar_image_url)",
+    )
+    .order("created_at", { ascending: false })
     .limit(100);
-  if (error) throw new Error('タイムラインを読み込めませんでした');
+  if (error) throw new Error("タイムラインを読み込めませんでした");
   return (data as unknown as TimelinePostRow[]).map(toTimelinePost);
 }
 
@@ -47,10 +49,10 @@ export async function createTimelinePost(
   loginId: string,
   input: { title: string; message: string },
 ): Promise<void> {
-  const { error } = await supabase.from('timeline_posts').insert({
+  const { error } = await supabase.from("timeline_posts").insert({
     author_login_id: loginId,
     title: input.title,
     message: input.message,
   });
-  if (error) throw new Error('投稿できませんでした');
+  if (error) throw new Error("投稿できませんでした");
 }

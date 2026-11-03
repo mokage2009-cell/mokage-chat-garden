@@ -1,6 +1,6 @@
-import { Bell, House, MessageCircle, Search, User, type LucideIcon } from 'lucide-react';
+import { Bell, House, MessageCircle, Search, User, type LucideIcon } from "lucide-react";
 
-export type TabId = 'home' | 'search' | 'chat' | 'notifications' | 'mypage';
+export type TabId = "home" | "search" | "chat" | "notifications" | "mypage";
 
 type TabItem = {
   id: TabId;
@@ -9,11 +9,11 @@ type TabItem = {
 };
 
 const TABS: TabItem[] = [
-  { id: 'home', label: 'ホーム', icon: House },
-  { id: 'search', label: '探す', icon: Search },
-  { id: 'chat', label: 'チャット', icon: MessageCircle },
-  { id: 'notifications', label: '通知', icon: Bell },
-  { id: 'mypage', label: 'マイページ', icon: User },
+  { id: "home", label: "ホーム", icon: House },
+  { id: "search", label: "探す", icon: Search },
+  { id: "chat", label: "チャット", icon: MessageCircle },
+  { id: "notifications", label: "通知", icon: Bell },
+  { id: "mypage", label: "マイページ", icon: User },
 ];
 
 type BottomNavProps = {
@@ -32,9 +32,9 @@ export default function BottomNav({ activeTab, onSelect }: BottomNavProps) {
               <button
                 type="button"
                 onClick={() => onSelect(id)}
-                aria-current={isActive ? 'page' : undefined}
+                aria-current={isActive ? "page" : undefined}
                 className={`flex w-full flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition active:scale-95 ${
-                  isActive ? 'text-cyan-700' : 'text-slate-500 hover:text-slate-800'
+                  isActive ? "text-cyan-700" : "text-slate-500 hover:text-slate-800"
                 }`}
               >
                 <Icon className="h-6 w-6" strokeWidth={isActive ? 2.4 : 2} />

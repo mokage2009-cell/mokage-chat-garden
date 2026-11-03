@@ -1,7 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { fetchProfile, type Profile } from '@/app/lib/profile';
-import ProfileEditForm from '@/app/components/profile/ProfileEditForm';
-import ProfileView from '@/app/components/profile/ProfileView';
+import { useEffect, useState, type ReactNode } from "react";
+import { fetchProfile, type Profile } from "@/app/lib/profile";
+import ProfileEditForm from "@/app/components/profile/ProfileEditForm";
+import ProfileView from "@/app/components/profile/ProfileView";
 
 type ProfilePanelProps = {
   loginId: string;

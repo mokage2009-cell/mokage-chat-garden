@@ -1,5 +1,5 @@
-import { Check, Loader2, UserRound } from 'lucide-react';
-import type { FriendPost } from '@/app/lib/friends';
+import { Check, Loader2, UserRound } from "lucide-react";
+import type { FriendPost } from "@/app/lib/friends";
 
 type FriendPostCardProps = {
   post: FriendPost;
@@ -91,10 +91,10 @@ function Avatar({ name, imageUrl }: { name: string; imageUrl: string | null }) {
 }
 
 function formatPostedAt(iso: string): string {
-  return new Date(iso).toLocaleString('ja-JP', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(iso).toLocaleString("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
   Image as ImageIcon,
@@ -12,8 +12,8 @@ import {
   Loader2,
   Megaphone,
   type LucideIcon,
-} from 'lucide-react';
-import type { User } from '@/app/lib/auth';
+} from "lucide-react";
+import type { User } from "@/app/lib/auth";
 import {
   fetchAllAccounts,
   fetchChatPartners,
@@ -26,7 +26,7 @@ import {
   type AdminChatMessage,
   type AdminPhoto,
   type AdminFeedback,
-} from '@/app/lib/admin';
+} from "@/app/lib/admin";
 
 type AdminScreenProps = {
   user: User;
@@ -34,29 +34,26 @@ type AdminScreenProps = {
   onSwitchToChat: () => void;
 };
 
-type Section = 'home' | 'accounts' | 'photos' | 'notify' | 'feedback';
+type Section = "home" | "accounts" | "photos" | "notify" | "feedback";
 
 export default function AdminScreen({ user, onLogout, onSwitchToChat }: AdminScreenProps) {
-  const [section, setSection] = useState<Section>('home');
+  const [section, setSection] = useState<Section>("home");
 
   return (
     <div className="animate-screen-in min-h-screen bg-slate-50 pb-24">
       <div className="mx-auto max-w-md">
-        {section === 'home' && (
-          <AdminHome user={user} onLogout={onLogout} onNavigate={setSection} onSwitchToChat={onSwitchToChat} />
+        {section === "home" && (
+          <AdminHome
+            user={user}
+            onLogout={onLogout}
+            onNavigate={setSection}
+            onSwitchToChat={onSwitchToChat}
+          />
         )}
-        {section === 'accounts' && (
-          <AccountsView onBack={() => setSection('home')} />
-        )}
-        {section === 'photos' && (
-          <PhotosView onBack={() => setSection('home')} />
-        )}
-        {section === 'notify' && (
-          <NotifyView onBack={() => setSection('home')} />
-        )}
-        {section === 'feedback' && (
-          <FeedbackView onBack={() => setSection('home')} />
-        )}
+        {section === "accounts" && <AccountsView onBack={() => setSection("home")} />}
+        {section === "photos" && <PhotosView onBack={() => setSection("home")} />}
+        {section === "notify" && <NotifyView onBack={() => setSection("home")} />}
+        {section === "feedback" && <FeedbackView onBack={() => setSection("home")} />}
       </div>
     </div>
   );
@@ -73,12 +70,37 @@ function AdminHome({
   onNavigate: (s: Section) => void;
   onSwitchToChat: () => void;
 }) {
-  const items: { id: Section; label: string; desc: string; icon: LucideIcon; gradient: string }[] = [
-    { id: 'accounts', label: 'アカウント管理', desc: '登録アカウント・チャット閲覧', icon: Users, gradient: 'from-cyan-400 to-cyan-600' },
-    { id: 'photos', label: '写真ギャラリー', desc: '送信された全写真', icon: ImageIcon, gradient: 'from-emerald-400 to-emerald-600' },
-    { id: 'notify', label: '通知送信', desc: '全ユーザーへ通知を送る', icon: Megaphone, gradient: 'from-amber-400 to-amber-600' },
-    { id: 'feedback', label: '意見確認', desc: '送られた意見を見る', icon: MessageSquare, gradient: 'from-rose-400 to-rose-600' },
-  ];
+  const items: { id: Section; label: string; desc: string; icon: LucideIcon; gradient: string }[] =
+    [
+      {
+        id: "accounts",
+        label: "アカウント管理",
+        desc: "登録アカウント・チャット閲覧",
+        icon: Users,
+        gradient: "from-cyan-400 to-cyan-600",
+      },
+      {
+        id: "photos",
+        label: "写真ギャラリー",
+        desc: "送信された全写真",
+        icon: ImageIcon,
+        gradient: "from-emerald-400 to-emerald-600",
+      },
+      {
+        id: "notify",
+        label: "通知送信",
+        desc: "全ユーザーへ通知を送る",
+        icon: Megaphone,
+        gradient: "from-amber-400 to-amber-600",
+      },
+      {
+        id: "feedback",
+        label: "意見確認",
+        desc: "送られた意見を見る",
+        icon: MessageSquare,
+        gradient: "from-rose-400 to-rose-600",
+      },
+    ];
 
   return (
     <div className="px-5 pt-8">
@@ -152,20 +174,28 @@ function ScreenHeader({ title, onBack }: { title: string; onBack: () => void }) 
 }
 
 function formatAccountNumber(n: number): string {
-  return String(n).padStart(4, '0');
+  return String(n).padStart(4, "0");
 }
 
 function formatTime(iso: string): string {
-  return new Date(iso).toLocaleString('ja-JP', {
-    month: 'numeric',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(iso).toLocaleString("ja-JP", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
-function Avatar({ name, imageUrl, size = 'md' }: { name: string; imageUrl: string | null; size?: 'sm' | 'md' }) {
-  const dim = size === 'sm' ? 'h-10 w-10' : 'h-12 w-12';
+function Avatar({
+  name,
+  imageUrl,
+  size = "md",
+}: {
+  name: string;
+  imageUrl: string | null;
+  size?: "sm" | "md";
+}) {
+  const dim = size === "sm" ? "h-10 w-10" : "h-12 w-12";
   return (
     <span
       className={`flex ${dim} shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-slate-400 to-slate-600 text-white`}
@@ -181,13 +211,13 @@ function Avatar({ name, imageUrl, size = 'md' }: { name: string; imageUrl: strin
   );
 }
 
-type AccountsViewStage = 'list' | 'partners' | 'chat';
+type AccountsViewStage = "list" | "partners" | "chat";
 
 function AccountsView({ onBack }: { onBack: () => void }) {
-  const [stage, setStage] = useState<AccountsViewStage>('list');
+  const [stage, setStage] = useState<AccountsViewStage>("list");
   const [accounts, setAccounts] = useState<AdminAccount[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [keyword, setKeyword] = useState('');
+  const [keyword, setKeyword] = useState("");
   const [selectedAccount, setSelectedAccount] = useState<AdminAccount | null>(null);
 
   const reload = useCallback(() => {
@@ -200,17 +230,18 @@ function AccountsView({ onBack }: { onBack: () => void }) {
     reload();
   }, [reload]);
 
-  const filtered = (accounts ?? []).filter((a) =>
-    a.displayName.toLowerCase().includes(keyword.trim().toLowerCase()) ||
-    a.loginId.toLowerCase().includes(keyword.trim().toLowerCase()),
+  const filtered = (accounts ?? []).filter(
+    (a) =>
+      a.displayName.toLowerCase().includes(keyword.trim().toLowerCase()) ||
+      a.loginId.toLowerCase().includes(keyword.trim().toLowerCase()),
   );
 
-  if (stage === 'partners' && selectedAccount) {
+  if (stage === "partners" && selectedAccount) {
     return (
       <PartnersView
         account={selectedAccount}
         onBack={() => {
-          setStage('list');
+          setStage("list");
           setSelectedAccount(null);
         }}
       />
@@ -253,7 +284,7 @@ function AccountsView({ onBack }: { onBack: () => void }) {
                   type="button"
                   onClick={() => {
                     setSelectedAccount(account);
-                    setStage('partners');
+                    setStage("partners");
                   }}
                   className="flex w-full items-center gap-3 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200/70 transition hover:shadow-md active:scale-[0.99]"
                 >
@@ -319,9 +350,7 @@ function PartnersView({ account, onBack }: { account: AdminAccount; onBack: () =
             読み込み中…
           </p>
         ) : partners.length === 0 ? (
-          <p className="py-16 text-center text-sm text-slate-500">
-            まだチャット相手がいません
-          </p>
+          <p className="py-16 text-center text-sm text-slate-500">まだチャット相手がいません</p>
         ) : (
           <ul className="space-y-3 pb-8">
             {partners.map((partner) => (
@@ -335,7 +364,12 @@ function PartnersView({ account, onBack }: { account: AdminAccount; onBack: () =
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold text-slate-900">{partner.displayName}</p>
                     <p className="truncate text-xs text-slate-500">
-                      {partner.context === 'dm' ? 'ダイレクト' : partner.context === 'community' ? 'コミュニティ' : 'タイムライン'} ・ {formatTime(partner.lastMessageAt)}
+                      {partner.context === "dm"
+                        ? "ダイレクト"
+                        : partner.context === "community"
+                          ? "コミュニティ"
+                          : "タイムライン"}{" "}
+                      ・ {formatTime(partner.lastMessageAt)}
                     </p>
                   </div>
                   <MessageSquare className="h-5 w-5 shrink-0 text-cyan-600" />
@@ -414,22 +448,20 @@ function ChatViewer({
               return (
                 <li
                   key={msg.id}
-                  className={`flex flex-col gap-1 ${isOwn ? 'items-end' : 'items-start'}`}
+                  className={`flex flex-col gap-1 ${isOwn ? "items-end" : "items-start"}`}
                 >
-                  <span className="text-xs font-semibold text-slate-600">
-                    {msg.senderName}
-                  </span>
+                  <span className="text-xs font-semibold text-slate-600">{msg.senderName}</span>
                   <div
                     className={`max-w-[80%] overflow-hidden rounded-2xl ${
                       isOwn
-                        ? 'bg-cyan-500 text-white'
-                        : 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70'
+                        ? "bg-cyan-500 text-white"
+                        : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70"
                     }`}
                   >
-                    {msg.mediaUrl && msg.mediaType?.startsWith('image/') && (
+                    {msg.mediaUrl && msg.mediaType?.startsWith("image/") && (
                       <img src={msg.mediaUrl} alt="" className="max-h-60 w-full object-cover" />
                     )}
-                    {msg.mediaUrl && msg.mediaType?.startsWith('video/') && (
+                    {msg.mediaUrl && msg.mediaType?.startsWith("video/") && (
                       <video src={msg.mediaUrl} controls className="max-h-60 w-full object-cover" />
                     )}
                     {msg.body && (
@@ -530,8 +562,8 @@ function PhotosView({ onBack }: { onBack: () => void }) {
 }
 
 function NotifyView({ onBack }: { onBack: () => void }) {
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -545,10 +577,10 @@ function NotifyView({ onBack }: { onBack: () => void }) {
     try {
       await sendBroadcastNotification(title.trim(), body.trim());
       setSent(true);
-      setTitle('');
-      setBody('');
+      setTitle("");
+      setBody("");
     } catch (err) {
-      setError(err instanceof Error ? err.message : '送信に失敗しました');
+      setError(err instanceof Error ? err.message : "送信に失敗しました");
     } finally {
       setSending(false);
     }
@@ -559,9 +591,7 @@ function NotifyView({ onBack }: { onBack: () => void }) {
       <ScreenHeader title="通知送信" onBack={onBack} />
       <div className="px-5">
         <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70">
-          <p className="mb-4 text-sm text-slate-600">
-            全ユーザーへ通知を一斉送信します
-          </p>
+          <p className="mb-4 text-sm text-slate-600">全ユーザーへ通知を一斉送信します</p>
           {sent && (
             <div className="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
               通知を送信しました
@@ -650,12 +680,8 @@ function FeedbackView({ onBack }: { onBack: () => void }) {
                 <div className="flex items-center gap-2">
                   <Avatar name={fb.senderName} imageUrl={null} size="sm" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-slate-900">
-                      {fb.senderName}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {formatTime(fb.createdAt)}
-                    </p>
+                    <p className="truncate text-sm font-bold text-slate-900">{fb.senderName}</p>
+                    <p className="truncate text-xs text-slate-500">{formatTime(fb.createdAt)}</p>
                   </div>
                 </div>
                 <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-700">

@@ -1,6 +1,6 @@
-import { supabase } from '@/app/lib/supabase';
+import { supabase } from "@/app/lib/supabase";
 
-export type NotificationType = 'friend_accepted' | 'admin' | 'community' | 'system';
+export type NotificationType = "friend_accepted" | "admin" | "community" | "system";
 
 export type AppNotification = {
   id: string;
@@ -44,27 +44,27 @@ function toNotification(row: NotificationRow): AppNotification {
 
 export async function fetchNotifications(loginId: string): Promise<AppNotification[]> {
   const { data, error } = await supabase
-    .from('notifications')
+    .from("notifications")
     .select(
-      'id, recipient_login_id, type, title, body, actor_login_id, is_read, created_at, actor:profiles!actor_login_id(display_name, avatar_image_url)',
+      "id, recipient_login_id, type, title, body, actor_login_id, is_read, created_at, actor:profiles!actor_login_id(display_name, avatar_image_url)",
     )
-    .eq('recipient_login_id', loginId)
-    .order('created_at', { ascending: false })
+    .eq("recipient_login_id", loginId)
+    .order("created_at", { ascending: false })
     .limit(100);
-  if (error) throw new Error('通知を読み込めませんでした');
+  if (error) throw new Error("通知を読み込めませんでした");
   return (data as unknown as NotificationRow[]).map(toNotification);
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
-  const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-  if (error) throw new Error('通知を既読にできませんでした');
+  const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+  if (error) throw new Error("通知を既読にできませんでした");
 }
 
 export async function markAllNotificationsRead(loginId: string): Promise<void> {
   const { error } = await supabase
-    .from('notifications')
+    .from("notifications")
     .update({ is_read: true })
-    .eq('recipient_login_id', loginId)
-    .eq('is_read', false);
-  if (error) throw new Error('通知を一括既読にできませんでした');
+    .eq("recipient_login_id", loginId)
+    .eq("is_read", false);
+  if (error) throw new Error("通知を一括既読にできませんでした");
 }

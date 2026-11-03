@@ -1,11 +1,11 @@
-import { supabase, signedUrl } from '@/app/lib/supabase';
+import { supabase, signedUrl } from "@/app/lib/supabase";
 
 export const COMMUNITY_LIMITS = {
   nameMax: 40,
   descriptionMax: 500,
 } as const;
 
-export type JoinMode = 'open' | 'approval';
+export type JoinMode = "open" | "approval";
 
 export type Community = {
   id: string;
@@ -39,7 +39,7 @@ type CommunityRow = {
   owner: { display_name: string; avatar_image_url: string | null } | null;
 };
 
-const UNIQUE_VIOLATION = '23505';
+const UNIQUE_VIOLATION = "23505";
 
 function toCommunity(row: CommunityRow): Community {
   return {
@@ -60,13 +60,13 @@ function toCommunity(row: CommunityRow): Community {
 export async function fetchCommunityFeed(loginId: string): Promise<CommunityFeed> {
   const [communitiesResult, membershipsResult] = await Promise.all([
     supabase
-      .from('communities')
+      .from("communities")
       .select(
-        'id, owner_login_id, name, description, created_at, header_image_url, avatar_image_url, owner_message, join_mode, owner:profiles!owner_login_id(display_name, avatar_image_url)',
+        "id, owner_login_id, name, description, created_at, header_image_url, avatar_image_url, owner_message, join_mode, owner:profiles!owner_login_id(display_name, avatar_image_url)",
       )
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(100),
-    supabase.from('community_memberships').select('community_id').eq('applicant_login_id', loginId),
+    supabase.from("community_memberships").select("community_id").eq("applicant_login_id", loginId),
   ]);
 
   if (communitiesResult.error) throw new Error(communitiesResult.error.message);
@@ -85,18 +85,18 @@ export async function createCommunity(
   input: { name: string; description: string },
 ): Promise<void> {
   const { data, error } = await supabase
-    .from('communities')
+    .from("communities")
     .insert({ owner_login_id: loginId, name: input.name, description: input.description })
-    .select('id')
+    .select("id")
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!data) throw new Error('コミュニティを作成できませんでした');
+  if (!data) throw new Error("コミュニティを作成できませんでした");
 
-  const { error: membershipError } = await supabase.from('community_memberships').insert({
+  const { error: membershipError } = await supabase.from("community_memberships").insert({
     community_id: data.id,
     applicant_login_id: loginId,
-    role: 'owner',
+    role: "owner",
   });
 
   if (membershipError) throw new Error(membershipError.message);
@@ -105,9 +105,14 @@ export async function createCommunity(
 export async function updateCommunityOwnerProfile(
   communityId: string,
   actorLoginId: string,
-  input: { name: string; ownerMessage: string; headerImageUrl: string | null; avatarImageUrl: string | null },
+  input: {
+    name: string;
+    ownerMessage: string;
+    headerImageUrl: string | null;
+    avatarImageUrl: string | null;
+  },
 ): Promise<void> {
-  const { error } = await supabase.rpc('update_community_owner_profile', {
+  const { error } = await supabase.rpc("update_community_owner_profile", {
     p_community_id: communityId,
     p_actor_login_id: actorLoginId,
     p_name: input.name,
@@ -115,29 +120,29 @@ export async function updateCommunityOwnerProfile(
     p_header_image_url: input.headerImageUrl,
     p_avatar_image_url: input.avatarImageUrl,
   });
-  if (error) throw new Error('コミュニティ情報を保存できませんでした');
+  if (error) throw new Error("コミュニティ情報を保存できませんでした");
 }
 
 export async function uploadCommunityImage(
   communityId: string,
-  kind: 'header' | 'avatar',
+  kind: "header" | "avatar",
   file: File,
 ): Promise<string> {
-  const extension = file.type.split('/')[1] === 'jpeg' ? 'jpg' : file.type.split('/')[1];
+  const extension = file.type.split("/")[1] === "jpeg" ? "jpg" : file.type.split("/")[1];
   const path = `communities/${communityId}/${kind}-${crypto.randomUUID()}.${extension}`;
-  const { error } = await supabase.storage.from('profile-images').upload(path, file, {
+  const { error } = await supabase.storage.from("profile-images").upload(path, file, {
     contentType: file.type,
-    cacheControl: '3600',
+    cacheControl: "3600",
   });
-  if (error) throw new Error('画像をアップロードできませんでした');
-  return signedUrl('profile-images', path);
+  if (error) throw new Error("画像をアップロードできませんでした");
+  return signedUrl("profile-images", path);
 }
 
 export async function applyToCommunity(communityId: string, loginId: string): Promise<void> {
-  const { error } = await supabase.from('community_memberships').insert({
+  const { error } = await supabase.from("community_memberships").insert({
     community_id: communityId,
     applicant_login_id: loginId,
-    role: 'applicant',
+    role: "applicant",
   });
 
   if (error && error.code !== UNIQUE_VIOLATION) throw new Error(error.message);
@@ -148,25 +153,27 @@ export type CommunityMember = {
   loginId: string;
   displayName: string;
   avatarUrl: string | null;
-  role: 'owner' | 'member' | 'applicant';
+  role: "owner" | "member" | "applicant";
   joinedAt: string;
 };
 
 type MembershipRow = {
   id: string;
   applicant_login_id: string;
-  role: 'owner' | 'member' | 'applicant';
+  role: "owner" | "member" | "applicant";
   created_at: string;
   applicant: { display_name: string; avatar_image_url: string | null } | null;
 };
 
 export async function fetchCommunityMembers(communityId: string): Promise<CommunityMember[]> {
   const { data, error } = await supabase
-    .from('community_memberships')
-    .select('id, applicant_login_id, role, created_at, applicant:profiles!applicant_login_id(display_name, avatar_image_url)')
-    .eq('community_id', communityId)
-    .order('created_at', { ascending: true });
-  if (error) throw new Error('メンバーを読み込めませんでした');
+    .from("community_memberships")
+    .select(
+      "id, applicant_login_id, role, created_at, applicant:profiles!applicant_login_id(display_name, avatar_image_url)",
+    )
+    .eq("community_id", communityId)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error("メンバーを読み込めませんでした");
   return (data as unknown as MembershipRow[]).map((row) => ({
     id: row.id,
     loginId: row.applicant_login_id,
@@ -177,27 +184,31 @@ export async function fetchCommunityMembers(communityId: string): Promise<Commun
   }));
 }
 
-export async function updateJoinMode(communityId: string, actorLoginId: string, joinMode: JoinMode): Promise<void> {
-  const { error } = await supabase.rpc('update_community_join_mode', {
+export async function updateJoinMode(
+  communityId: string,
+  actorLoginId: string,
+  joinMode: JoinMode,
+): Promise<void> {
+  const { error } = await supabase.rpc("update_community_join_mode", {
     p_community_id: communityId,
     p_actor_login_id: actorLoginId,
     p_join_mode: joinMode,
   });
-  if (error) throw new Error('参加設定を変更できませんでした');
+  if (error) throw new Error("参加設定を変更できませんでした");
 }
 
 export async function approveMember(membershipId: string, actorLoginId: string): Promise<void> {
-  const { error } = await supabase.rpc('approve_community_member', {
+  const { error } = await supabase.rpc("approve_community_member", {
     p_membership_id: membershipId,
     p_actor_login_id: actorLoginId,
   });
-  if (error) throw new Error('メンバーを承認できませんでした');
+  if (error) throw new Error("メンバーを承認できませんでした");
 }
 
 export async function rejectMember(membershipId: string, actorLoginId: string): Promise<void> {
-  const { error } = await supabase.rpc('reject_community_member', {
+  const { error } = await supabase.rpc("reject_community_member", {
     p_membership_id: membershipId,
     p_actor_login_id: actorLoginId,
   });
-  if (error) throw new Error('申請を拒否できませんでした');
+  if (error) throw new Error("申請を拒否できませんでした");
 }

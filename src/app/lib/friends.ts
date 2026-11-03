@@ -1,4 +1,4 @@
-import { supabase } from '@/app/lib/supabase';
+import { supabase } from "@/app/lib/supabase";
 
 export const FRIEND_POST_LIMITS = {
   titleMax: 40,
@@ -29,7 +29,7 @@ export type FriendFeed = {
   appliedPostIds: string[];
 };
 
-const UNIQUE_VIOLATION = '23505';
+const UNIQUE_VIOLATION = "23505";
 
 function toFriendPost(row: FriendPostRow): FriendPost {
   return {
@@ -46,13 +46,13 @@ function toFriendPost(row: FriendPostRow): FriendPost {
 export async function fetchFriendFeed(loginId: string): Promise<FriendFeed> {
   const [postsResult, requestsResult] = await Promise.all([
     supabase
-      .from('friend_posts')
+      .from("friend_posts")
       .select(
-        'id, author_login_id, title, message, created_at, author:profiles!author_login_id(display_name, avatar_image_url)',
+        "id, author_login_id, title, message, created_at, author:profiles!author_login_id(display_name, avatar_image_url)",
       )
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(100),
-    supabase.from('friend_requests').select('post_id').eq('applicant_login_id', loginId),
+    supabase.from("friend_requests").select("post_id").eq("applicant_login_id", loginId),
   ]);
 
   if (postsResult.error) throw new Error(postsResult.error.message);
@@ -68,7 +68,7 @@ export async function createFriendPost(
   loginId: string,
   input: { title: string; message: string },
 ): Promise<void> {
-  const { error } = await supabase.from('friend_posts').insert({
+  const { error } = await supabase.from("friend_posts").insert({
     author_login_id: loginId,
     title: input.title,
     message: input.message,
@@ -79,7 +79,7 @@ export async function createFriendPost(
 
 export async function applyToFriendPost(postId: string, loginId: string): Promise<void> {
   const { error } = await supabase
-    .from('friend_requests')
+    .from("friend_requests")
     .insert({ post_id: postId, applicant_login_id: loginId });
 
   if (error && error.code !== UNIQUE_VIOLATION) throw new Error(error.message);
@@ -107,18 +107,27 @@ type IncomingFriendRow = {
 export async function fetchFriends(loginId: string): Promise<Friend[]> {
   const [outgoing, incoming] = await Promise.all([
     supabase
-      .from('friend_requests')
-      .select('post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url)')
-      .eq('applicant_login_id', loginId)
-      .eq('status', 'accepted')
-      .order('created_at', { ascending: false }),
+      .from("friend_requests")
+      .select(
+        "post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url)",
+      )
+      .eq("applicant_login_id", loginId)
+      .eq("status", "accepted")
+      .order("created_at", { ascending: false }),
     supabase
-      .from('friend_requests')
-      .select('post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url)')
-      .in('post_id', (await supabase.from('friend_posts').select('id').eq('author_login_id', loginId)).data?.map((r: { id: string }) => r.id) ?? [])
-      .eq('status', 'accepted')
-      .neq('applicant_login_id', loginId)
-      .order('created_at', { ascending: false }),
+      .from("friend_requests")
+      .select(
+        "post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url)",
+      )
+      .in(
+        "post_id",
+        (await supabase.from("friend_posts").select("id").eq("author_login_id", loginId)).data?.map(
+          (r: { id: string }) => r.id,
+        ) ?? [],
+      )
+      .eq("status", "accepted")
+      .neq("applicant_login_id", loginId)
+      .order("created_at", { ascending: false }),
   ]);
 
   if (outgoing.error) throw new Error(outgoing.error.message);
@@ -165,33 +174,38 @@ type PendingRequestRow = {
 
 export async function fetchPendingRequests(loginId: string): Promise<PendingRequest[]> {
   const { data: postIds } = await supabase
-    .from('friend_posts')
-    .select('id')
-    .eq('author_login_id', loginId);
+    .from("friend_posts")
+    .select("id")
+    .eq("author_login_id", loginId);
   if (!postIds || postIds.length === 0) return [];
 
   const { data, error } = await supabase
-    .from('friend_requests')
-    .select('id, post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url), post:friend_posts!post_id(title)')
-    .in('post_id', postIds.map((r: { id: string }) => r.id))
-    .eq('status', 'pending')
-    .neq('applicant_login_id', loginId)
-    .order('created_at', { ascending: false });
+    .from("friend_requests")
+    .select(
+      "id, post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url), post:friend_posts!post_id(title)",
+    )
+    .in(
+      "post_id",
+      postIds.map((r: { id: string }) => r.id),
+    )
+    .eq("status", "pending")
+    .neq("applicant_login_id", loginId)
+    .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data as unknown as PendingRequestRow[]).map((row) => ({
     requestId: row.id,
     applicantLoginId: row.applicant_login_id,
     applicantName: row.applicant?.display_name ?? row.applicant_login_id,
     applicantAvatarUrl: row.applicant?.avatar_image_url ?? null,
-    postTitle: row.post?.title ?? '',
+    postTitle: row.post?.title ?? "",
     postId: row.post_id,
   }));
 }
 
-export async function respondToFriendRequest(requestId: string, status: 'accepted' | 'rejected'): Promise<void> {
-  const { error } = await supabase
-    .from('friend_requests')
-    .update({ status })
-    .eq('id', requestId);
-  if (error) throw new Error('申請に応答できませんでした');
+export async function respondToFriendRequest(
+  requestId: string,
+  status: "accepted" | "rejected",
+): Promise<void> {
+  const { error } = await supabase.from("friend_requests").update({ status }).eq("id", requestId);
+  if (error) throw new Error("申請に応答できませんでした");
 }

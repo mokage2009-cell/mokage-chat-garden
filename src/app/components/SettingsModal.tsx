@@ -1,7 +1,17 @@
-import { useState, type FormEvent } from 'react';
-import { AlertTriangle, Check, LogOut, MessageSquare, Send, Trash2, X, Loader2, type LucideIcon } from 'lucide-react';
-import Modal from '@/app/components/ui/Modal';
-import { FEEDBACK_LIMITS, deleteOwnAccount, sendFeedback } from '@/app/lib/feedback';
+import { useState, type FormEvent } from "react";
+import {
+  AlertTriangle,
+  Check,
+  LogOut,
+  MessageSquare,
+  Send,
+  Trash2,
+  X,
+  Loader2,
+  type LucideIcon,
+} from "lucide-react";
+import Modal from "@/app/components/ui/Modal";
+import { FEEDBACK_LIMITS, deleteOwnAccount, sendFeedback } from "@/app/lib/feedback";
 
 type SettingsModalProps = {
   loginId: string;
@@ -10,11 +20,16 @@ type SettingsModalProps = {
   onClose: () => void;
 };
 
-type Phase = 'menu' | 'feedback' | 'delete';
+type Phase = "menu" | "feedback" | "delete";
 
-export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onClose }: SettingsModalProps) {
-  const [phase, setPhase] = useState<Phase>('menu');
-  const [feedbackMessage, setFeedbackMessage] = useState('');
+export default function SettingsModal({
+  loginId,
+  onLogout,
+  onAccountDeleted,
+  onClose,
+}: SettingsModalProps) {
+  const [phase, setPhase] = useState<Phase>("menu");
+  const [feedbackMessage, setFeedbackMessage] = useState("");
   const [feedbackSending, setFeedbackSending] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -31,7 +46,7 @@ export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onC
       await sendFeedback(loginId, trimmed);
       setFeedbackSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '送信に失敗しました');
+      setError(err instanceof Error ? err.message : "送信に失敗しました");
     } finally {
       setFeedbackSending(false);
     }
@@ -44,7 +59,7 @@ export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onC
       await deleteOwnAccount(loginId);
       onAccountDeleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '削除に失敗しました');
+      setError(err instanceof Error ? err.message : "削除に失敗しました");
       setDeleting(false);
     }
   };
@@ -54,13 +69,17 @@ export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onC
       <div className="p-6 pt-12">
         <h2 className="text-xl font-bold text-app">設定</h2>
 
-        {phase === 'menu' && (
+        {phase === "menu" && (
           <div className="mt-5 space-y-3">
-            <SettingsRow icon={MessageSquare} label="管理者に意見を送る" onClick={() => setPhase('feedback')} />
+            <SettingsRow
+              icon={MessageSquare}
+              label="管理者に意見を送る"
+              onClick={() => setPhase("feedback")}
+            />
             <SettingsRow icon={LogOut} label="ログアウト" onClick={onLogout} />
             <button
               type="button"
-              onClick={() => setPhase('delete')}
+              onClick={() => setPhase("delete")}
               className="flex w-full items-center gap-3 rounded-2xl p-4 text-left transition hover:bg-rose-50 active:scale-[0.99]"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
@@ -71,9 +90,16 @@ export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onC
           </div>
         )}
 
-        {phase === 'feedback' && (
+        {phase === "feedback" && (
           <div className="mt-5">
-            <BackHeader onBack={() => { setPhase('menu'); setFeedbackSent(false); setFeedbackMessage(''); }} title="意見を送る" />
+            <BackHeader
+              onBack={() => {
+                setPhase("menu");
+                setFeedbackSent(false);
+                setFeedbackMessage("");
+              }}
+              title="意見を送る"
+            />
             {feedbackSent ? (
               <div className="rounded-2xl bg-emerald-50 p-6 text-center">
                 <Check className="mx-auto h-8 w-8 text-emerald-600" />
@@ -89,13 +115,21 @@ export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onC
                   rows={5}
                   className="w-full resize-none rounded-2xl bg-slate-100 px-4 py-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
-                {error && <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
+                {error && (
+                  <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {error}
+                  </p>
+                )}
                 <button
                   type="submit"
                   disabled={feedbackSending || !feedbackMessage.trim()}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-600 py-3 font-bold text-white disabled:opacity-50"
                 >
-                  {feedbackSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {feedbackSending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                   送信する
                 </button>
               </form>
@@ -103,15 +137,33 @@ export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onC
           </div>
         )}
 
-        {phase === 'delete' && (
+        {phase === "delete" && (
           <div className="mt-5">
-            <BackHeader onBack={() => { setPhase('menu'); setConfirmDelete(false); setError(null); }} title="アカウント削除" />
+            <BackHeader
+              onBack={() => {
+                setPhase("menu");
+                setConfirmDelete(false);
+                setError(null);
+              }}
+              title="アカウント削除"
+            />
             <div className="rounded-2xl bg-rose-50 p-5 ring-1 ring-rose-200">
               <AlertTriangle className="h-8 w-8 text-rose-600" />
-              <p className="mt-3 text-sm font-bold text-rose-800">アカウントを削除すると元に戻せません</p>
-              <p className="mt-2 text-xs text-rose-600">プロフィール、投稿、チャットなどすべてのデータが完全に削除されます。</p>
+              <p className="mt-3 text-sm font-bold text-rose-800">
+                アカウントを削除すると元に戻せません
+              </p>
+              <p className="mt-2 text-xs text-rose-600">
+                プロフィール、投稿、チャットなどすべてのデータが完全に削除されます。
+              </p>
             </div>
-            {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
+            {error && (
+              <p
+                role="alert"
+                className="mt-3 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700"
+              >
+                {error}
+              </p>
+            )}
             {!confirmDelete ? (
               <button
                 type="button"
@@ -151,7 +203,15 @@ export default function SettingsModal({ loginId, onLogout, onAccountDeleted, onC
   );
 }
 
-function SettingsRow({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) {
+function SettingsRow({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
@@ -169,12 +229,14 @@ function SettingsRow({ icon: Icon, label, onClick }: { icon: LucideIcon; label: 
 function BackHeader({ onBack, title }: { onBack: () => void; title: string }) {
   return (
     <div className="mb-4 flex items-center gap-3">
-      <button type="button" onClick={onBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 active:scale-95">
+      <button
+        type="button"
+        onClick={onBack}
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 active:scale-95"
+      >
         <X className="h-4 w-4" />
       </button>
       <h3 className="text-base font-bold text-app">{title}</h3>
     </div>
   );
 }
-
-

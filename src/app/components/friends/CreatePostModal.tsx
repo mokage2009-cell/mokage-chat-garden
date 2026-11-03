@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react';
-import { Loader2 } from 'lucide-react';
-import Modal from '@/app/components/ui/Modal';
-import { createFriendPost, FRIEND_POST_LIMITS } from '@/app/lib/friends';
+import { useState, type FormEvent } from "react";
+import { Loader2 } from "lucide-react";
+import Modal from "@/app/components/ui/Modal";
+import { createFriendPost, FRIEND_POST_LIMITS } from "@/app/lib/friends";
 
 type CreatePostModalProps = {
   loginId: string;
@@ -10,8 +10,8 @@ type CreatePostModalProps = {
 };
 
 export default function CreatePostModal({ loginId, onClose, onCreated }: CreatePostModalProps) {
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,7 +37,7 @@ export default function CreatePostModal({ loginId, onClose, onCreated }: CreateP
       await createFriendPost(loginId, { title: trimmedTitle, message: message.trim() });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '投稿に失敗しました');
+      setError(err instanceof Error ? err.message : "投稿に失敗しました");
       setIsSubmitting(false);
     }
   };
@@ -47,7 +47,9 @@ export default function CreatePostModal({ loginId, onClose, onCreated }: CreateP
       <form onSubmit={handleSubmit} className="space-y-5 p-6 pt-12">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-slate-900">投稿する</h2>
-          <p className="mt-1 text-sm text-slate-500">募集内容を書いて、フレンドを呼びかけましょう</p>
+          <p className="mt-1 text-sm text-slate-500">
+            募集内容を書いて、フレンドを呼びかけましょう
+          </p>
         </div>
 
         <label className="block space-y-2">
@@ -103,7 +105,7 @@ export default function CreatePostModal({ loginId, onClose, onCreated }: CreateP
             className="flex flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 font-bold text-white shadow-lg shadow-emerald-600/30 transition hover:shadow-xl active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isSubmitting ? '投稿中…' : '投稿する'}
+            {isSubmitting ? "投稿中…" : "投稿する"}
           </button>
         </div>
       </form>

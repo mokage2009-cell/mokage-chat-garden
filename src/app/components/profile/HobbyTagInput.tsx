@@ -1,6 +1,6 @@
-import { useState, type KeyboardEvent } from 'react';
-import { X } from 'lucide-react';
-import { PROFILE_LIMITS } from '@/app/lib/profile';
+import { useState, type KeyboardEvent } from "react";
+import { X } from "lucide-react";
+import { PROFILE_LIMITS } from "@/app/lib/profile";
 
 type HobbyTagInputProps = {
   hobbies: string[];
@@ -8,7 +8,7 @@ type HobbyTagInputProps = {
 };
 
 export default function HobbyTagInput({ hobbies, onChange }: HobbyTagInputProps) {
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState("");
   const [hint, setHint] = useState<string | null>(null);
   const isFull = hobbies.length >= PROFILE_LIMITS.hobbyMax;
 
@@ -17,7 +17,7 @@ export default function HobbyTagInput({ hobbies, onChange }: HobbyTagInputProps)
     if (!value) return;
 
     if (hobbies.includes(value)) {
-      setHint('同じ趣味が既に追加されています');
+      setHint("同じ趣味が既に追加されています");
       return;
     }
     if (Array.from(value).length > PROFILE_LIMITS.hobbyLengthMax) {
@@ -26,12 +26,12 @@ export default function HobbyTagInput({ hobbies, onChange }: HobbyTagInputProps)
     }
 
     onChange([...hobbies, value]);
-    setDraft('');
+    setDraft("");
     setHint(null);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === "Enter") {
       event.preventDefault();
       addHobby();
     }
@@ -49,7 +49,7 @@ export default function HobbyTagInput({ hobbies, onChange }: HobbyTagInputProps)
           }}
           onKeyDown={handleKeyDown}
           disabled={isFull}
-          placeholder={isFull ? '追加できるのは10個までです' : '例：読書'}
+          placeholder={isFull ? "追加できるのは10個までです" : "例：読書"}
           className="min-w-0 flex-1 rounded-2xl bg-slate-100 px-4 py-3 text-slate-900 transition placeholder:text-slate-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-60"
         />
         <button

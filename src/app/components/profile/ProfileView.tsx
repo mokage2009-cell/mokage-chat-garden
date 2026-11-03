@@ -1,6 +1,6 @@
-import { ArrowLeft, Pencil } from 'lucide-react';
-import ProfileCard from '@/app/components/profile/ProfileCard';
-import type { Profile } from '@/app/lib/profile';
+import { ArrowLeft, Pencil } from "lucide-react";
+import ProfileCard from "@/app/components/profile/ProfileCard";
+import type { Profile } from "@/app/lib/profile";
 
 type ProfileViewProps = {
   profile: Profile;

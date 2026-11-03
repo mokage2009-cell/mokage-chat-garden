@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import HomeScreen from '@/app/components/HomeScreen';
-import LoginScreen from '@/app/components/LoginScreen';
-import AdminScreen from '@/app/components/admin/AdminScreen';
-import { loadCurrentUser, signOut, type User } from '@/app/lib/auth';
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import HomeScreen from "@/app/components/HomeScreen";
+import LoginScreen from "@/app/components/LoginScreen";
+import AdminScreen from "@/app/components/admin/AdminScreen";
+import { loadCurrentUser, signOut, type User } from "@/app/lib/auth";
 
 function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
-  const [view, setView] = useState<'chat' | 'admin'>('chat');
+  const [view, setView] = useState<"chat" | "admin">("chat");
 
   useEffect(() => {
     loadCurrentUser()
@@ -19,7 +19,7 @@ function App() {
   const logout = () => {
     void signOut();
     setCurrentUser(null);
-    setView('chat');
+    setView("chat");
   };
 
   if (!ready) {
@@ -36,8 +36,10 @@ function App() {
 
   const isOwner = currentUser.accountNumber === 1;
 
-  if (isOwner && view === 'admin') {
-    return <AdminScreen user={currentUser} onLogout={logout} onSwitchToChat={() => setView('chat')} />;
+  if (isOwner && view === "admin") {
+    return (
+      <AdminScreen user={currentUser} onLogout={logout} onSwitchToChat={() => setView("chat")} />
+    );
   }
 
   return (
@@ -45,7 +47,7 @@ function App() {
       user={currentUser}
       onLogout={logout}
       isOwner={isOwner}
-      {...(isOwner ? { onSwitchToAdmin: () => setView('admin') } : {})}
+      {...(isOwner ? { onSwitchToAdmin: () => setView("admin") } : {})}
     />
   );
 }

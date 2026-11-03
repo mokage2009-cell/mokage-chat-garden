@@ -1,5 +1,5 @@
-import { Check, Loader2, Users, UserRound } from 'lucide-react';
-import type { Community } from '@/app/lib/communities';
+import { Check, Loader2, Users, UserRound } from "lucide-react";
+import type { Community } from "@/app/lib/communities";
 
 type CommunityCardProps = {
   community: Community;
