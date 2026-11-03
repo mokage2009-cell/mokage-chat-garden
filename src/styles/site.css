@@ -1,0 +1,5 @@
+/* Residual styles from the imported site that Tailwind utilities can't
+   express: font faces, keyframes, global element rules, and a few
+   selector-bound rules. Everything else was converted to Tailwind. */
+@layer theme, base, components, utilities;
+html { line-height: normal; }
