@@ -1,5 +1,5 @@
 import { supabase } from "@/app/lib/supabase";
-import { loginEmail } from "@/app/lib/accountRules";
+import { PASSWORD_MIN, authPassword, loginEmail } from "@/app/lib/accountRules";
 import { createAccount } from "@/app/lib/account.functions";
 
 export type User = {
@@ -23,7 +23,7 @@ export async function loadCurrentUser(): Promise<User | null> {
 }
 
 export async function signIn(id: string, password: string): Promise<User | null> {
-  const { error } = await supabase.auth.signInWithPassword({ email: loginEmail(id), password });
+  const { error } = await supabase.auth.signInWithPassword({ email: loginEmail(id), password: authPassword(password) });
   if (error) return null;
   const user = await loadCurrentUser();
   if (!user) await supabase.auth.signOut();
@@ -44,4 +44,10 @@ export async function signUp(
 
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
+}
+
+export async function changePassword(newPassword: string): Promise<void> {
+  if (newPassword.length < PASSWORD_MIN) throw new Error(`パスワードは${PASSWORD_MIN}文字以上で入力してください`);
+  const { error } = await supabase.auth.updateUser({ password: authPassword(newPassword) });
+  if (error) throw new Error("パスワードを変更できませんでした");
 }

@@ -52,7 +52,7 @@ export default function ChatScreen({ loginId, onClose }: ChatScreenProps) {
         scopeId={selected.postId}
         loginId={loginId}
         title={selected.displayName}
-        subtitle={`@${selected.loginId}`}
+        subtitle=""
         onBack={() => setSelected(null)}
       />
     );
@@ -150,7 +150,6 @@ export default function ChatScreen({ loginId, onClose }: ChatScreenProps) {
                   <Avatar name={friend.displayName} imageUrl={friend.avatarUrl} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-bold text-slate-900">{friend.displayName}</p>
-                    <p className="truncate text-xs text-slate-500">@{friend.loginId}</p>
                   </div>
                   <span className="text-sm font-semibold text-cyan-700">チャット</span>
                 </button>

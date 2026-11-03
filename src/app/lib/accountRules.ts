@@ -5,3 +5,9 @@ export const OWNER_LOGIN_ID = "mokou1101";
 export function loginEmail(loginId: string): string {
   return `${loginId.toLowerCase()}@users.mokagechat.local`;
 }
+
+// The auth system requires at least 6 characters; short passwords (3–5) are padded with a fixed suffix.
+export const PASSWORD_MIN = 3;
+export function authPassword(password: string): string {
+  return password.length < 6 ? `${password}#mkpad` : password;
+}

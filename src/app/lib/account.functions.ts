@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { loginEmail, OWNER_LOGIN_ID } from "@/app/lib/accountRules";
+import { authPassword, loginEmail, OWNER_LOGIN_ID } from "@/app/lib/accountRules";
 
 type SignUpInput = { loginId: string; password: string; displayName: string };
 
@@ -23,7 +23,7 @@ export const createAccount = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true } | { error: string }> => {
     if (!/^[A-Za-z0-9]{1,30}$/.test(data.loginId))
       return { error: "ユーザーIDは半角英数字1〜30文字で入力してください" };
-    if (data.password.length < 6) return { error: "パスワードは6文字以上で入力してください" };
+    if (data.password.length < 3) return { error: "パスワードは3文字以上で入力してください" };
     if (data.displayName.length < 1 || data.displayName.length > 30)
       return { error: "表示名は1〜30文字で入力してください" };
 
@@ -53,7 +53,7 @@ export const createAccount = createServerFn({ method: "POST" })
 
     const { data: created, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: loginEmail(data.loginId),
-      password: data.password,
+      password: authPassword(data.password),
       email_confirm: true,
     });
     if (authError || !created.user) {
