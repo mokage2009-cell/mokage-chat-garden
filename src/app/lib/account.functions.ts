@@ -61,7 +61,7 @@ export const createAccount = createServerFn({ method: "POST" })
       if (/already|registered|exists/i.test(msg))
         return { error: "このユーザーIDは既に使われています" };
       if (/password/i.test(msg))
-        return { error: "このパスワードは使えません。別のパスワードにしてください" };
+        return { error: "このパスワードは安全性が低いため使えません。別のパスワードにしてください" };
       return { error: "アカウントを作成できませんでした" };
     }
 
