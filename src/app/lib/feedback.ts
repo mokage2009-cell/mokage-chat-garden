@@ -1,4 +1,5 @@
 import { supabase } from '@/app/lib/supabase';
+import { deleteMyAccount } from '@/app/lib/account.functions';
 
 export const FEEDBACK_LIMITS = { messageMax: 2000 } as const;
 
@@ -10,12 +11,12 @@ export async function sendFeedback(loginId: string, message: string): Promise<vo
   if (error) throw new Error('意見を送信できませんでした');
 }
 
-export async function deleteOwnAccount(loginId: string): Promise<void> {
-  const { error: recordError } = await supabase
-    .from('deleted_user_ids')
-    .upsert({ login_id: loginId, deleted_at: new Date().toISOString() });
-  if (recordError) throw new Error('アカウントを削除できませんでした');
-
-  const { error } = await supabase.from('profiles').delete().eq('login_id', loginId);
-  if (error) throw new Error('アカウントを削除できませんでした');
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function deleteOwnAccount(_loginId: string): Promise<void> {
+  try {
+    await deleteMyAccount();
+  } catch {
+    throw new Error('アカウントを削除できませんでした');
+  }
+  await supabase.auth.signOut();
 }
