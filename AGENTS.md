@@ -8,3 +8,8 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- The ported chat app lives in src/app (screens, lib) and renders from src/routes/index.tsx; keep it there rather than splitting into routes, because it is a single-screen state-driven app.
+- Sign-in uses a user ID + password mapped to an internal email (src/app/lib/accountRules.ts); accounts are created server-side so no confirmation email is needed.
+- Storage buckets are private (public buckets are blocked by workspace policy); uploads store long-lived signed URLs.
+- RLS identifies the caller via public.current_login_id(); the owner/admin is the profile with account_number 1.

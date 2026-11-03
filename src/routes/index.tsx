@@ -1,18 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import capturedCSS from "../styles/site.css?inline";
+import App from "@/app/App";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Convo Chat App Prototype" }] }),
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Convo — もかげチャット" },
+      { name: "description", content: "友達募集・コミュニティ・タイムライン・チャットが楽しめるコミュニケーションアプリ。" },
+      { property: "og:title", content: "Convo — もかげチャット" },
+      { property: "og:description", content: "友達募集・コミュニティ・タイムライン・チャットが楽しめるコミュニケーションアプリ。" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: App,
 });
-
-function Index() {
-  return (
-    <>
-      <style>{capturedCSS.replace(/(<\/|<)(s)(tyle)/gi, (_, prefix, letter, rest) => prefix + (letter === "s" ? "\\73 " : "\\53 ") + rest)}</style>
-      <div>
-        <div id="root" />
-      </div>
-    </>
-  );
-}
