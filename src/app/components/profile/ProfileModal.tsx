@@ -29,7 +29,7 @@ export default function ProfileModal({ loginId, onClose }: ProfileModalProps) {
   return (
     <Modal label="プロフィール" onClose={onClose}>
       {profile ? (
-        <ProfileCard profile={profile} />
+        <ProfileCard profile={profile} hideLoginId />
       ) : (
         <p
           role={error ? "alert" : "status"}

@@ -494,7 +494,6 @@ function CommunityChatDetail({
                       <p className="truncate text-sm font-semibold text-slate-900">
                         {member.displayName}
                       </p>
-                      <p className="truncate text-xs text-slate-500">@{member.loginId}</p>
                     </div>
                     {member.role === "owner" ? (
                       <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-bold text-cyan-700">

@@ -6,9 +6,10 @@ type ProfileCardProps = {
   profile: Profile;
   coverAction?: ReactNode;
   nameAction?: ReactNode;
+  hideLoginId?: boolean;
 };
 
-export default function ProfileCard({ profile, coverAction, nameAction }: ProfileCardProps) {
+export default function ProfileCard({ profile, coverAction, nameAction, hideLoginId }: ProfileCardProps) {
   const [avatarFailed, setAvatarFailed] = useState(false);
   const [headerFailed, setHeaderFailed] = useState(false);
   const genderLabel =
@@ -51,7 +52,7 @@ export default function ProfileCard({ profile, coverAction, nameAction }: Profil
               {profile.displayName}
             </h2>
             <div className="flex items-center gap-2">
-              <p className="text-sm text-slate-500">@{profile.loginId}</p>
+              {!hideLoginId && <p className="text-sm text-slate-500">@{profile.loginId}</p>}
               <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-bold text-cyan-700">
                 No.{String(profile.accountNumber).padStart(4, "0")}
               </span>
