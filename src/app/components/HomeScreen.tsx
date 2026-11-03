@@ -64,7 +64,7 @@ export default function HomeScreen({ user, onLogout, isOwner = false, onSwitchTo
 
   useEffect(() => {
     const stored = getStoredThemeId();
-    const theme = THEMES.find((t) => t.id === stored) ?? THEMES[0];
+    const theme = THEMES.find((t) => t.id === stored) ?? THEMES[0]!;
     applyTheme(theme);
   }, []);
 

@@ -58,14 +58,14 @@ export function useTheme() {
   const [themeId, setThemeId] = useState<ThemeId>(getStoredThemeId);
 
   useEffect(() => {
-    const theme = THEMES.find((t) => t.id === themeId) ?? THEMES[0];
+    const theme = THEMES.find((t) => t.id === themeId) ?? THEMES[0]!;
     applyTheme(theme);
     try { localStorage.setItem(STORAGE_KEY, themeId); } catch { /* ignore */ }
   }, [themeId]);
 
   const changeTheme = useCallback((id: ThemeId) => setThemeId(id), []);
 
-  const currentTheme = THEMES.find((t) => t.id === themeId) ?? THEMES[0];
+  const currentTheme = THEMES.find((t) => t.id === themeId) ?? THEMES[0]!;
 
   return { themeId, changeTheme, currentTheme };
 }

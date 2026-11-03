@@ -45,7 +45,7 @@ function App() {
       user={currentUser}
       onLogout={logout}
       isOwner={isOwner}
-      onSwitchToAdmin={isOwner ? () => setView('admin') : undefined}
+      {...(isOwner ? { onSwitchToAdmin: () => setView('admin') } : {})}
     />
   );
 }
