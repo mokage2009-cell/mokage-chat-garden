@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import {
   AlertTriangle,
   Check,
+  KeyRound,
   LogOut,
   MessageSquare,
   Send,
@@ -12,6 +13,8 @@ import {
 } from "lucide-react";
 import Modal from "@/app/components/ui/Modal";
 import { FEEDBACK_LIMITS, deleteOwnAccount, sendFeedback } from "@/app/lib/feedback";
+import { changePassword } from "@/app/lib/auth";
+import { PASSWORD_MIN } from "@/app/lib/accountRules";
 
 type SettingsModalProps = {
   loginId: string;
@@ -20,7 +23,7 @@ type SettingsModalProps = {
   onClose: () => void;
 };
 
-type Phase = "menu" | "feedback" | "delete";
+type Phase = "menu" | "feedback" | "delete" | "password";
 
 export default function SettingsModal({
   loginId,
@@ -35,6 +38,24 @@ export default function SettingsModal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwDone, setPwDone] = useState(false);
+
+  const handleChangePassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPwSaving(true);
+    setError(null);
+    try {
+      await changePassword(newPassword);
+      setPwDone(true);
+      setNewPassword("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "変更に失敗しました");
+    } finally {
+      setPwSaving(false);
+    }
+  };
 
   const handleSendFeedback = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -76,6 +97,7 @@ export default function SettingsModal({
               label="管理者に意見を送る"
               onClick={() => setPhase("feedback")}
             />
+            <SettingsRow icon={KeyRound} label="パスワード変更" onClick={() => setPhase("password")} />
             <SettingsRow icon={LogOut} label="ログアウト" onClick={onLogout} />
             <button
               type="button"
@@ -131,6 +153,49 @@ export default function SettingsModal({
                     <Send className="h-4 w-4" />
                   )}
                   送信する
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {phase === "password" && (
+          <div className="mt-5">
+            <BackHeader
+              onBack={() => {
+                setPhase("menu");
+                setPwDone(false);
+                setError(null);
+              }}
+              title="パスワード変更"
+            />
+            {pwDone ? (
+              <div className="rounded-2xl bg-emerald-50 p-6 text-center">
+                <Check className="mx-auto h-8 w-8 text-emerald-600" />
+                <p className="mt-3 text-sm font-bold text-emerald-800">パスワードを変更しました</p>
+              </div>
+            ) : (
+              <form onSubmit={handleChangePassword} className="space-y-3">
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder={`新しいパスワード（${PASSWORD_MIN}文字以上）`}
+                  autoComplete="new-password"
+                  className="w-full rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                />
+                {error && (
+                  <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={pwSaving || newPassword.length < PASSWORD_MIN}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-600 py-3 font-bold text-white disabled:opacity-50"
+                >
+                  {pwSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  変更する
                 </button>
               </form>
             )}
