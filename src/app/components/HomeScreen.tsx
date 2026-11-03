@@ -356,7 +356,7 @@ function ThemeModal({
   return (
     <Modal label="テーマ色" onClose={onClose}>
       <div className="p-6 pt-12">
-        <h2 className="text-xl font-bold text-app">テーマ色</h2>
+        <h2 className="text-xl font-bold text-slate-900">テーマ色</h2>
         <div className="mt-5 grid grid-cols-2 gap-3">
           {THEMES.map((theme: Theme) => (
             <button

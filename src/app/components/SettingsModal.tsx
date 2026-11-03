@@ -67,7 +67,7 @@ export default function SettingsModal({
   return (
     <Modal label="設定" onClose={onClose}>
       <div className="p-6 pt-12">
-        <h2 className="text-xl font-bold text-app">設定</h2>
+        <h2 className="text-xl font-bold text-slate-900">設定</h2>
 
         {phase === "menu" && (
           <div className="mt-5 space-y-3">
@@ -221,7 +221,7 @@ function SettingsRow({
       <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700">
         <Icon className="h-4 w-4" />
       </span>
-      <span className="text-sm font-bold text-app">{label}</span>
+      <span className="text-sm font-bold text-slate-900">{label}</span>
     </button>
   );
 }
@@ -236,7 +236,7 @@ function BackHeader({ onBack, title }: { onBack: () => void; title: string }) {
       >
         <X className="h-4 w-4" />
       </button>
-      <h3 className="text-base font-bold text-app">{title}</h3>
+      <h3 className="text-base font-bold text-slate-900">{title}</h3>
     </div>
   );
 }
