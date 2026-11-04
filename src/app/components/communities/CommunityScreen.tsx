@@ -55,6 +55,8 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
     }
   };
 
+  const detailCommunity = feed?.communities.find((item) => item.id === detailCommunityId) ?? null;
+
   return (
     <div className="animate-screen-in min-h-screen bg-sky-50 pb-12">
       <div className="mx-auto max-w-md px-5">
