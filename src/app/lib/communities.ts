@@ -7,6 +7,11 @@ export const COMMUNITY_LIMITS = {
 
 export type JoinMode = "open" | "approval";
 
+export const JOIN_MODE_LABEL: Record<JoinMode, string> = {
+  open: "自動参加制",
+  approval: "申請制",
+};
+
 export type Community = {
   id: string;
   ownerLoginId: string;
@@ -18,6 +23,7 @@ export type Community = {
   name: string;
   description: string;
   joinMode: JoinMode;
+  memberCount: number;
   createdAt: string;
 };
 
@@ -41,7 +47,7 @@ type CommunityRow = {
 
 const UNIQUE_VIOLATION = "23505";
 
-function toCommunity(row: CommunityRow): Community {
+function toCommunity(row: CommunityRow, memberCount: number): Community {
   return {
     id: row.id,
     ownerLoginId: row.owner_login_id,
@@ -53,9 +59,16 @@ function toCommunity(row: CommunityRow): Community {
     name: row.name,
     description: row.description,
     joinMode: row.join_mode,
+    memberCount,
     createdAt: row.created_at,
   };
 }
+
+type MembershipSummaryRow = {
+  community_id: string;
+  applicant_login_id: string;
+  role: "owner" | "member" | "applicant";
+};
 
 export async function fetchCommunityFeed(loginId: string): Promise<CommunityFeed> {
   const [communitiesResult, membershipsResult] = await Promise.all([
@@ -66,17 +79,28 @@ export async function fetchCommunityFeed(loginId: string): Promise<CommunityFeed
       )
       .order("created_at", { ascending: false })
       .limit(100),
-    supabase.from("community_memberships").select("community_id").eq("applicant_login_id", loginId),
+    supabase.from("community_memberships").select("community_id, applicant_login_id, role"),
   ]);
 
   if (communitiesResult.error) throw new Error(communitiesResult.error.message);
   if (membershipsResult.error) throw new Error(membershipsResult.error.message);
 
+  const memberships = (membershipsResult.data as MembershipSummaryRow[] | null) ?? [];
+  const counts = new Map<string, number>();
+  const appliedCommunityIds: string[] = [];
+
+  for (const row of memberships) {
+    if (row.role === "owner" || row.role === "member") {
+      counts.set(row.community_id, (counts.get(row.community_id) ?? 0) + 1);
+    }
+    if (row.applicant_login_id === loginId) appliedCommunityIds.push(row.community_id);
+  }
+
   return {
-    communities: (communitiesResult.data as unknown as CommunityRow[]).map(toCommunity),
-    appliedCommunityIds: (membershipsResult.data as { community_id: string }[]).map(
-      (row) => row.community_id,
+    communities: (communitiesResult.data as unknown as CommunityRow[]).map((row) =>
+      toCommunity(row, counts.get(row.id) ?? 0),
     ),
+    appliedCommunityIds,
   };
 }
 
