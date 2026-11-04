@@ -374,24 +374,33 @@ export type Database = {
       timeline_posts: {
         Row: {
           author_login_id: string
+          community_ids: string[]
           created_at: string
           id: string
+          media: Json
           message: string
           title: string
+          visibility: string
         }
         Insert: {
           author_login_id: string
+          community_ids?: string[]
           created_at?: string
           id?: string
+          media?: Json
           message?: string
           title: string
+          visibility?: string
         }
         Update: {
           author_login_id?: string
+          community_ids?: string[]
           created_at?: string
           id?: string
+          media?: Json
           message?: string
           title?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -441,6 +450,7 @@ export type Database = {
         Args: { p_actor_login_id: string; p_membership_id: string }
         Returns: undefined
       }
+      are_friends: { Args: { a: string; b: string }; Returns: boolean }
       create_community_chat_room: {
         Args: {
           p_actor_login_id: string
@@ -459,6 +469,10 @@ export type Database = {
         Returns: undefined
       }
       is_app_owner: { Args: never; Returns: boolean }
+      is_member_of_any: {
+        Args: { p_ids: string[]; p_login: string }
+        Returns: boolean
+      }
       reject_community_member: {
         Args: { p_actor_login_id: string; p_membership_id: string }
         Returns: undefined
