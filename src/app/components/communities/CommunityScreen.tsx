@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import CommunityCard from "@/app/components/communities/CommunityCard";
+import CommunityDetailModal from "@/app/components/communities/CommunityDetailModal";
 import CreateCommunityModal from "@/app/components/communities/CreateCommunityModal";
 import ProfileModal from "@/app/components/profile/ProfileModal";
 import { applyToCommunity, fetchCommunityFeed, type CommunityFeed } from "@/app/lib/communities";
@@ -16,6 +17,7 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
   const [reloadKey, setReloadKey] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedLoginId, setSelectedLoginId] = useState<string | null>(null);
+  const [detailCommunityId, setDetailCommunityId] = useState<string | null>(null);
   const [applyingCommunityId, setApplyingCommunityId] = useState<string | null>(null);
   const [applyError, setApplyError] = useState<string | null>(null);
 
@@ -36,10 +38,12 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
   }, [loginId, reloadKey]);
 
   const handleApply = async (communityId: string) => {
+    const community = feed?.communities.find((item) => item.id === communityId);
+    if (!community) return;
     setApplyError(null);
     setApplyingCommunityId(communityId);
     try {
-      await applyToCommunity(communityId, loginId);
+      await applyToCommunity(communityId, loginId, community.joinMode);
       setFeed(
         (prev) =>
           prev && { ...prev, appliedCommunityIds: [...prev.appliedCommunityIds, communityId] },
@@ -50,6 +54,8 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
       setApplyingCommunityId(null);
     }
   };
+
+  const detailCommunity = feed?.communities.find((item) => item.id === detailCommunityId) ?? null;
 
   return (
     <div className="animate-screen-in min-h-screen bg-sky-50 pb-12">
@@ -102,7 +108,7 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
                   isOwn={community.ownerLoginId === loginId}
                   isApplied={feed.appliedCommunityIds.includes(community.id)}
                   isApplying={applyingCommunityId === community.id}
-                  onOpenProfile={setSelectedLoginId}
+                  onOpenDetail={setDetailCommunityId}
                   onApply={handleApply}
                 />
               </li>
@@ -119,6 +125,17 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
             setIsCreating(false);
             setReloadKey((key) => key + 1);
           }}
+        />
+      )}
+      {detailCommunity && (
+        <CommunityDetailModal
+          community={detailCommunity}
+          isOwn={detailCommunity.ownerLoginId === loginId}
+          isApplied={feed?.appliedCommunityIds.includes(detailCommunity.id) ?? false}
+          isApplying={applyingCommunityId === detailCommunity.id}
+          onApply={handleApply}
+          onOpenProfile={setSelectedLoginId}
+          onClose={() => setDetailCommunityId(null)}
         />
       )}
       {selectedLoginId && (

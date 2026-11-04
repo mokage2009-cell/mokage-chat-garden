@@ -1,12 +1,12 @@
-import { Check, Loader2, Users, UserRound } from "lucide-react";
-import type { Community } from "@/app/lib/communities";
+import { Check, Loader2, Users } from "lucide-react";
+import { JOIN_MODE_LABEL, type Community } from "@/app/lib/communities";
 
 type CommunityCardProps = {
   community: Community;
   isOwn: boolean;
   isApplied: boolean;
   isApplying: boolean;
-  onOpenProfile: (loginId: string) => void;
+  onOpenDetail: (communityId: string) => void;
   onApply: (communityId: string) => void;
 };
 
@@ -15,37 +15,46 @@ export default function CommunityCard({
   isOwn,
   isApplied,
   isApplying,
-  onOpenProfile,
+  onOpenDetail,
   onApply,
 }: CommunityCardProps) {
   return (
     <article className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200/70 transition hover:shadow-md">
       <button
         type="button"
-        onClick={() => onOpenProfile(community.ownerLoginId)}
-        className="group flex flex-col items-start gap-4 p-5 pb-4 text-left transition"
+        onClick={() => onOpenDetail(community.id)}
+        className="group flex flex-col items-start gap-3 p-5 pb-4 text-left transition"
       >
         <div className="flex w-full items-center gap-3">
-          <Avatar name={community.ownerName} imageUrl={community.ownerAvatarUrl} />
+          <CommunityAvatar name={community.name} imageUrl={community.avatarImageUrl} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-slate-900">{community.ownerName}</p>
-            <p className="text-xs text-slate-500">コミュニティオーナー</p>
-          </div>
-          <Users className="h-5 w-5 shrink-0 text-cyan-600" />
-        </div>
-
-        <div className="w-full">
-          <h3 className="break-words text-[17px] font-bold leading-snug text-slate-900 group-hover:text-cyan-800">
-            {community.name}
-          </h3>
-          {community.description && (
-            <p className="mt-2 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-[1.5] text-slate-700">
-              {community.description}
+            <p className="truncate text-[17px] font-bold leading-snug text-slate-900 group-hover:text-cyan-800">
+              {community.name}
             </p>
-          )}
+            <p className="text-xs text-slate-500">コミュニティ</p>
+          </div>
         </div>
 
-        <span className="text-xs font-semibold text-cyan-700">オーナーのプロフィールを見る</span>
+        <div className="flex w-full flex-wrap items-center gap-1.5">
+          <span className="max-w-full truncate rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+            オーナー：{community.ownerName}
+          </span>
+          <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-cyan-800">
+            {JOIN_MODE_LABEL[community.joinMode]}
+          </span>
+          <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+            <Users className="h-3.5 w-3.5" />
+            {community.memberCount}名
+          </span>
+        </div>
+
+        {community.description && (
+          <p className="line-clamp-2 w-full whitespace-pre-wrap break-words text-sm leading-[1.5] text-slate-700">
+            {community.description}
+          </p>
+        )}
+
+        <span className="text-xs font-semibold text-cyan-700">コミュニティの詳細を見る</span>
       </button>
 
       <div className="border-t border-slate-100 px-5 py-3">
@@ -56,7 +65,7 @@ export default function CommunityCard({
         ) : isApplied ? (
           <span className="flex w-full items-center justify-center gap-1.5 rounded-2xl bg-slate-100 py-2.5 text-sm font-semibold text-slate-600">
             <Check className="h-4 w-4" />
-            申請済み
+            {community.joinMode === "open" ? "参加済み" : "申請済み"}
           </span>
         ) : (
           <button
@@ -66,7 +75,7 @@ export default function CommunityCard({
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-600 py-2.5 text-sm font-bold text-white shadow-md shadow-cyan-600/20 transition hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isApplying && <Loader2 className="h-4 w-4 animate-spin" />}
-            申請する！
+            {community.joinMode === "open" ? "参加する！" : "申請する！"}
           </button>
         )}
       </div>
@@ -74,15 +83,15 @@ export default function CommunityCard({
   );
 }
 
-function Avatar({ name, imageUrl }: { name: string; imageUrl: string | null }) {
+function CommunityAvatar({ name, imageUrl }: { name: string; imageUrl: string | null }) {
   return (
-    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-400 to-cyan-600 text-white">
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 text-white">
       {imageUrl ? (
         <img src={imageUrl} alt="" className="h-full w-full object-cover" />
       ) : name ? (
         <span className="text-base font-bold">{Array.from(name)[0]}</span>
       ) : (
-        <UserRound className="h-5 w-5" />
+        <Users className="h-5 w-5" />
       )}
     </span>
   );
