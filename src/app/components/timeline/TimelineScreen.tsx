@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import CreateTimelinePostModal from "@/app/components/timeline/CreateTimelinePostModal";
 import TimelinePostCard from "@/app/components/timeline/TimelinePostCard";
-import ChatConversation from "@/app/components/chat/ChatConversation";
 import ProfileModal from "@/app/components/profile/ProfileModal";
-import { fetchTimelinePosts, type TimelinePost } from "@/app/lib/timeline";
+import { deleteTimelinePost, fetchTimelinePosts, type TimelinePost } from "@/app/lib/timeline";
 
 type TimelineScreenProps = { loginId: string; onClose: () => void };
 
@@ -14,7 +13,6 @@ export default function TimelineScreen({ loginId, onClose }: TimelineScreenProps
   const [reloadKey, setReloadKey] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedLoginId, setSelectedLoginId] = useState<string | null>(null);
-  const [chatPost, setChatPost] = useState<TimelinePost | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -30,18 +28,15 @@ export default function TimelineScreen({ loginId, onClose }: TimelineScreenProps
     };
   }, [reloadKey]);
 
-  if (chatPost) {
-    return (
-      <ChatConversation
-        context="timeline"
-        scopeId={chatPost.id}
-        loginId={loginId}
-        title={chatPost.title}
-        subtitle={chatPost.authorName}
-        onBack={() => setChatPost(null)}
-      />
-    );
-  }
+  const handleDelete = async (post: TimelinePost) => {
+    if (!window.confirm("この投稿を削除しますか？")) return;
+    try {
+      await deleteTimelinePost(post.id);
+      setPosts((prev) => prev?.filter((p) => p.id !== post.id) ?? prev);
+    } catch {
+      setError("削除できませんでした");
+    }
+  };
 
   return (
     <div className="animate-screen-in min-h-screen bg-sky-50 pb-12">
@@ -88,8 +83,9 @@ export default function TimelineScreen({ loginId, onClose }: TimelineScreenProps
               <li key={post.id}>
                 <TimelinePostCard
                   post={post}
+                  isMine={post.authorLoginId === loginId}
                   onOpenProfile={setSelectedLoginId}
-                  onOpenChat={setChatPost}
+                  onDelete={handleDelete}
                 />
               </li>
             ))}

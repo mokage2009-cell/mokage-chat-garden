@@ -8,6 +8,13 @@
       "when": 1793680662605,
       "tag": "0000_mokage_chat_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793790752245,
+      "tag": "0001_timeline_visibility_media",
+      "breakpoints": true
     }
   ]
 }
