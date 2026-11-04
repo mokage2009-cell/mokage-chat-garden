@@ -1,6 +1,6 @@
 import { supabase } from "@/app/lib/supabase";
 import { PASSWORD_MIN, authPassword, loginEmail } from "@/app/lib/accountRules";
-import { createAccount } from "@/app/lib/account.functions";
+import { changeMyPassword, createAccount } from "@/app/lib/account.functions";
 
 export type User = {
   id: string;
@@ -48,6 +48,6 @@ export async function signOut(): Promise<void> {
 
 export async function changePassword(newPassword: string): Promise<void> {
   if (newPassword.length < PASSWORD_MIN) throw new Error(`パスワードは${PASSWORD_MIN}文字以上で入力してください`);
-  const { error } = await supabase.auth.updateUser({ password: authPassword(newPassword) });
-  if (error) throw new Error("パスワードを変更できませんでした");
+  const result = await changeMyPassword({ data: { password: newPassword } });
+  if ("error" in result) throw new Error(result.error);
 }

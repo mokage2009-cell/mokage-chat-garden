@@ -119,3 +119,19 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
     if (error) throw new Error("アカウントを削除できませんでした");
     return { ok: true };
   });
+
+export const changeMyPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { password: string }) => {
+    if (!input || typeof input.password !== "string") throw new Error("invalid input");
+    return input;
+  })
+  .handler(async ({ data, context }): Promise<{ ok: true } | { error: string }> => {
+    if (data.password.length < 3) return { error: "パスワードは3文字以上で入力してください" };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(context.userId, {
+      password: authPassword(data.password),
+    });
+    if (error) return { error: "パスワードを変更できませんでした" };
+    return { ok: true };
+  });

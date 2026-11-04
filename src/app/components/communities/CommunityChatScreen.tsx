@@ -490,11 +490,15 @@ function CommunityChatDetail({
                       member={member}
                       onTap={() => setSelectedLoginId(member.loginId)}
                     />
-                    <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLoginId(member.loginId)}
+                      className="min-w-0 flex-1 text-left"
+                    >
                       <p className="truncate text-sm font-semibold text-slate-900">
                         {member.displayName}
                       </p>
-                    </div>
+                    </button>
                     {member.role === "owner" ? (
                       <span className="rounded-full bg-cyan-100 px-2.5 py-1 text-[10px] font-bold text-cyan-700">
                         オーナー
