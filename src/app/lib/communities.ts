@@ -162,11 +162,15 @@ export async function uploadCommunityImage(
   return signedUrl("profile-images", path);
 }
 
-export async function applyToCommunity(communityId: string, loginId: string): Promise<void> {
+export async function applyToCommunity(
+  communityId: string,
+  loginId: string,
+  joinMode: JoinMode = "approval",
+): Promise<void> {
   const { error } = await supabase.from("community_memberships").insert({
     community_id: communityId,
     applicant_login_id: loginId,
-    role: "applicant",
+    role: joinMode === "open" ? "member" : "applicant",
   });
 
   if (error && error.code !== UNIQUE_VIOLATION) throw new Error(error.message);
