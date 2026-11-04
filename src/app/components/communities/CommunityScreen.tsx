@@ -38,10 +38,12 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
   }, [loginId, reloadKey]);
 
   const handleApply = async (communityId: string) => {
+    const community = feed?.communities.find((item) => item.id === communityId);
+    if (!community) return;
     setApplyError(null);
     setApplyingCommunityId(communityId);
     try {
-      await applyToCommunity(communityId, loginId);
+      await applyToCommunity(communityId, loginId, community.joinMode);
       setFeed(
         (prev) =>
           prev && { ...prev, appliedCommunityIds: [...prev.appliedCommunityIds, communityId] },
@@ -104,7 +106,7 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
                   isOwn={community.ownerLoginId === loginId}
                   isApplied={feed.appliedCommunityIds.includes(community.id)}
                   isApplying={applyingCommunityId === community.id}
-                  onOpenProfile={setSelectedLoginId}
+                  onOpenDetail={setDetailCommunityId}
                   onApply={handleApply}
                 />
               </li>
@@ -121,6 +123,17 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
             setIsCreating(false);
             setReloadKey((key) => key + 1);
           }}
+        />
+      )}
+      {detailCommunity && (
+        <CommunityDetailModal
+          community={detailCommunity}
+          isOwn={detailCommunity.ownerLoginId === loginId}
+          isApplied={feed?.appliedCommunityIds.includes(detailCommunity.id) ?? false}
+          isApplying={applyingCommunityId === detailCommunity.id}
+          onApply={handleApply}
+          onOpenProfile={setSelectedLoginId}
+          onClose={() => setDetailCommunityId(null)}
         />
       )}
       {selectedLoginId && (
