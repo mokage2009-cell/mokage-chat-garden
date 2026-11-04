@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Plus } from "lucide-react";
 import CommunityCard from "@/app/components/communities/CommunityCard";
+import CommunityDetailModal from "@/app/components/communities/CommunityDetailModal";
 import CreateCommunityModal from "@/app/components/communities/CreateCommunityModal";
 import ProfileModal from "@/app/components/profile/ProfileModal";
 import { applyToCommunity, fetchCommunityFeed, type CommunityFeed } from "@/app/lib/communities";
@@ -16,6 +17,7 @@ export default function CommunityScreen({ loginId, onClose }: CommunityScreenPro
   const [reloadKey, setReloadKey] = useState(0);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedLoginId, setSelectedLoginId] = useState<string | null>(null);
+  const [detailCommunityId, setDetailCommunityId] = useState<string | null>(null);
   const [applyingCommunityId, setApplyingCommunityId] = useState<string | null>(null);
   const [applyError, setApplyError] = useState<string | null>(null);
 
