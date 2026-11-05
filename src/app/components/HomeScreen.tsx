@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bell,
   Check,
@@ -14,7 +14,6 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import BottomNav, { type TabId } from "@/app/components/BottomNav";
 import ProfilePanel from "@/app/components/profile/ProfilePanel";
 import FriendRecruitScreen from "@/app/components/friends/FriendRecruitScreen";
 import CommunityScreen from "@/app/components/communities/CommunityScreen";
@@ -108,7 +107,8 @@ export default function HomeScreen({
   isOwner = false,
   onSwitchToAdmin,
 }: HomeScreenProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("home");
+  const [page, setPage] = useState(0);
+  const pagerRef = useRef<HTMLDivElement>(null);
   const [displayName, setDisplayName] = useState(user.name);
   const [overlay, setOverlay] = useState<
     | "profile"
@@ -225,8 +225,15 @@ export default function HomeScreen({
           </div>
         </header>
 
-        <main key={activeTab} className="animate-screen-in px-5">
-          {activeTab === "home" && (
+        <div
+          ref={pagerRef}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            setPage(Math.round(el.scrollLeft / el.clientWidth));
+          }}
+          className="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <section className="w-full shrink-0 snap-center px-5" aria-label="ページ1">
             <MenuGrid
               onSelect={(id) => {
                 if (id === "profile") setOverlay("profile");
@@ -239,22 +246,31 @@ export default function HomeScreen({
                 if (id === "search") setOverlay("search");
               }}
             />
-          )}
-          {activeTab === "mypage" && (
+          </section>
+          <section className="w-full shrink-0 snap-center px-5" aria-label="ページ2">
             <MyPage name={displayName} onLogout={onLogout} theme={currentTheme} />
-          )}
-          {activeTab === "search" && (
-            <SearchScreen
-              loginId={user.id}
-              onClose={() => {
-                setActiveTab("home");
-              }}
-            />
-          )}
-        </main>
+          </section>
+        </div>
       </div>
 
-      <BottomNav activeTab={activeTab} onSelect={setActiveTab} />
+      <div className="fixed inset-x-0 bottom-6 z-20 flex justify-center gap-2">
+        {[0, 1].map((i) => (
+          <button
+            key={i}
+            type="button"
+            aria-label={`ページ${i + 1}`}
+            onClick={() => {
+              const el = pagerRef.current;
+              if (el) el.scrollTo({ left: el.clientWidth * i, behavior: "smooth" });
+            }}
+            className="h-2.5 w-2.5 rounded-full border-2 transition"
+            style={{
+              borderColor: "var(--app-text)",
+              backgroundColor: page === i ? "var(--app-text)" : "transparent",
+            }}
+          />
+        ))}
+      </div>
 
       {settingsOpen && (
         <SettingsModal
