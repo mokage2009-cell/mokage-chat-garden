@@ -32,6 +32,7 @@ import {
 import {
   COMMUNITY_CHAT_LIMITS,
   createChatRoom,
+  leaveCommunity,
   deleteChatRoom,
   dissolveCommunity,
   fetchChatRooms,
@@ -103,8 +104,12 @@ export default function CommunityChatScreen({ loginId, onClose }: CommunityChatS
                   onClick={() => setSelected(community)}
                   className="flex w-full items-center gap-4 rounded-3xl bg-white p-5 text-left shadow-sm ring-1 ring-slate-200/70 transition hover:shadow-md active:scale-[0.99]"
                 >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-700">
-                    <Users className="h-6 w-6" />
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-cyan-100 text-cyan-700">
+                    {community.avatarImageUrl ? (
+                      <img src={community.avatarImageUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <Users className="h-6 w-6" />
+                    )}
                   </span>
                   <span className="min-w-0 flex-1">
                     <strong className="block truncate text-base text-slate-900">
@@ -382,7 +387,7 @@ function CommunityChatDetail({
 
         {activeTab === "chat" && (
           <div className="mt-4">
-            {isOwner && (
+            {(
               <form onSubmit={handleCreateRoom} className="mb-3 flex gap-2">
                 <input
                   value={roomName}
@@ -544,13 +549,21 @@ function CommunityChatDetail({
                 </button>
               </>
             ) : (
-              <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200/70">
-                <Settings className="mx-auto h-8 w-8 text-slate-400" />
-                <p className="mt-3 text-sm font-bold text-slate-900">設定はオーナーのみ</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  コミュニティの設定変更はオーナーが行います
-                </p>
-              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!window.confirm("このコミュニティを退会しますか？")) return;
+                  try {
+                    await leaveCommunity(community.id);
+                    onDissolved();
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "退会できませんでした");
+                  }
+                }}
+                className="w-full rounded-2xl border border-rose-200 bg-white py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50"
+              >
+                退会
+              </button>
             )}
           </div>
         )}
