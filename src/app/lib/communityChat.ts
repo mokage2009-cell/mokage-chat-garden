@@ -42,6 +42,11 @@ export async function deleteChatRoom(roomId: string, actorLoginId: string): Prom
   if (error) throw new Error("チャット欄を削除できませんでした");
 }
 
+export async function leaveCommunity(communityId: string): Promise<void> {
+  const { error } = await supabase.rpc("leave_community", { p_community_id: communityId });
+  if (error) throw new Error("退会できませんでした");
+}
+
 export async function dissolveCommunity(communityId: string, actorLoginId: string): Promise<void> {
   const { error } = await supabase.rpc("dissolve_community", {
     p_community_id: communityId,
