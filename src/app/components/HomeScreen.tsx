@@ -9,6 +9,7 @@ import {
   Palette,
   Search,
   Settings,
+  Sparkles,
   ShieldCheck,
   User as UserIcon,
   Users,
@@ -22,6 +23,7 @@ import TimelineScreen from "@/app/components/timeline/TimelineScreen";
 import ChatScreen from "@/app/components/chat/ChatScreen";
 import NotificationsScreen from "@/app/components/notifications/NotificationsScreen";
 import SearchScreen from "@/app/components/search/SearchScreen";
+import ImageGenScreen from "@/app/components/imageGen/ImageGenScreen";
 import SettingsModal from "@/app/components/SettingsModal";
 import Modal from "@/app/components/ui/Modal";
 import { useTheme, applyTheme, getStoredThemeId, THEMES, type Theme } from "@/app/lib/theme";
@@ -119,6 +121,7 @@ export default function HomeScreen({
     | "chat"
     | "notifications"
     | "search"
+    | "imagegen"
     | null
   >(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -163,6 +166,10 @@ export default function HomeScreen({
 
   if (overlay === "notifications") {
     return <NotificationsScreen loginId={user.id} onClose={() => setOverlay(null)} />;
+  }
+
+  if (overlay === "imagegen") {
+    return <ImageGenScreen loginId={user.id} onClose={() => setOverlay(null)} />;
   }
 
   if (overlay === "search") {
@@ -248,7 +255,18 @@ export default function HomeScreen({
             />
           </section>
           <section className="w-full shrink-0 snap-center px-5" aria-label="ページ2">
-            <MyPage name={displayName} onLogout={onLogout} theme={currentTheme} />
+            <div className="grid grid-cols-2 gap-4">
+              <MenuCard
+                item={{
+                  id: "imagegen",
+                  label: "画像生成",
+                  icon: Sparkles,
+                  gradient: "from-pink-300 via-violet-300 to-sky-300",
+                  blob: "bg-pink-100",
+                }}
+                onClick={() => setOverlay("imagegen")}
+              />
+            </div>
           </section>
         </div>
       </div>
