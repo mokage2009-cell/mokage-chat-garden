@@ -201,6 +201,7 @@ function CommunityChatDetail({
         name: row.name,
         description: row.description,
         joinMode: row.join_mode,
+        memberCount: community.memberCount,
         createdAt: row.created_at,
       });
     }
