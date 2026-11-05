@@ -473,6 +473,7 @@ export type Database = {
         Args: { p_ids: string[]; p_login: string }
         Returns: boolean
       }
+      leave_community: { Args: { p_community_id: string }; Returns: undefined }
       reject_community_member: {
         Args: { p_actor_login_id: string; p_membership_id: string }
         Returns: undefined
