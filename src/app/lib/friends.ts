@@ -98,61 +98,57 @@ type FriendRow = {
   applicant: { display_name: string; avatar_image_url: string | null } | null;
 };
 
-type IncomingFriendRow = {
-  post_id: string;
+type AcceptedRow = {
+  id: string;
+  post_id: string | null;
   applicant_login_id: string;
-  applicant: { display_name: string; avatar_image_url: string | null } | null;
+  target_login_id: string | null;
+  post: { author_login_id: string } | null;
 };
 
 export async function fetchFriends(loginId: string): Promise<Friend[]> {
-  const [outgoing, incoming] = await Promise.all([
-    supabase
-      .from("friend_requests")
-      .select(
-        "post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url)",
-      )
-      .eq("applicant_login_id", loginId)
-      .eq("status", "accepted")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("friend_requests")
-      .select(
-        "post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url)",
-      )
-      .in(
-        "post_id",
-        (await supabase.from("friend_posts").select("id").eq("author_login_id", loginId)).data?.map(
-          (r: { id: string }) => r.id,
-        ) ?? [],
-      )
-      .eq("status", "accepted")
-      .neq("applicant_login_id", loginId)
-      .order("created_at", { ascending: false }),
-  ]);
+  const myPostIds =
+    (await supabase.from("friend_posts").select("id").eq("author_login_id", loginId)).data?.map(
+      (r: { id: string }) => r.id,
+    ) ?? [];
+  const filters = [`applicant_login_id.eq.${loginId}`, `target_login_id.eq.${loginId}`];
+  if (myPostIds.length) filters.push(`post_id.in.(${myPostIds.join(",")})`);
+  const { data, error } = await supabase
+    .from("friend_requests")
+    .select("id, post_id, applicant_login_id, target_login_id, post:friend_posts!post_id(author_login_id)")
+    .eq("status", "accepted")
+    .or(filters.join(","))
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
 
-  if (outgoing.error) throw new Error(outgoing.error.message);
-  if (incoming.error) throw new Error(incoming.error.message);
-
-  const outgoingFriends = (outgoing.data as unknown as FriendRow[]).map((row) => ({
-    loginId: row.applicant_login_id,
-    displayName: row.applicant?.display_name ?? row.applicant_login_id,
-    avatarUrl: row.applicant?.avatar_image_url ?? null,
-    postId: row.post_id,
-  }));
-
-  const incomingFriends = (incoming.data as unknown as IncomingFriendRow[]).map((row) => ({
-    loginId: row.applicant_login_id,
-    displayName: row.applicant?.display_name ?? row.applicant_login_id,
-    avatarUrl: row.applicant?.avatar_image_url ?? null,
-    postId: row.post_id,
-  }));
+  const pairs = (data as unknown as AcceptedRow[])
+    .map((row) => {
+      const other =
+        row.applicant_login_id === loginId
+          ? (row.target_login_id ?? row.post?.author_login_id ?? null)
+          : row.applicant_login_id;
+      return other && other !== loginId ? { other, scopeId: row.post_id ?? row.id } : null;
+    })
+    .filter((x): x is { other: string; scopeId: string } => x !== null);
 
   const seen = new Set<string>();
-  return [...outgoingFriends, ...incomingFriends].filter((f) => {
-    if (seen.has(f.loginId)) return false;
-    seen.add(f.loginId);
-    return true;
-  });
+  const unique = pairs.filter((p) => (seen.has(p.other) ? false : (seen.add(p.other), true)));
+  if (unique.length === 0) return [];
+  const { data: profs } = await supabase
+    .from("profiles")
+    .select("login_id, display_name, avatar_image_url")
+    .in("login_id", unique.map((p) => p.other));
+  const byId = new Map(
+    ((profs ?? []) as { login_id: string; display_name: string; avatar_image_url: string | null }[]).map(
+      (p) => [p.login_id, p],
+    ),
+  );
+  return unique.map((p) => ({
+    loginId: p.other,
+    displayName: byId.get(p.other)?.display_name ?? p.other,
+    avatarUrl: byId.get(p.other)?.avatar_image_url ?? null,
+    postId: p.scopeId,
+  }));
 }
 
 export type PendingRequest = {
@@ -166,28 +162,25 @@ export type PendingRequest = {
 
 type PendingRequestRow = {
   id: string;
-  post_id: string;
+  post_id: string | null;
   applicant_login_id: string;
   applicant: { display_name: string; avatar_image_url: string | null } | null;
   post: { title: string } | null;
 };
 
 export async function fetchPendingRequests(loginId: string): Promise<PendingRequest[]> {
-  const { data: postIds } = await supabase
-    .from("friend_posts")
-    .select("id")
-    .eq("author_login_id", loginId);
-  if (!postIds || postIds.length === 0) return [];
-
+  const myPostIds =
+    (await supabase.from("friend_posts").select("id").eq("author_login_id", loginId)).data?.map(
+      (r: { id: string }) => r.id,
+    ) ?? [];
+  const filters = [`target_login_id.eq.${loginId}`];
+  if (myPostIds.length) filters.push(`post_id.in.(${myPostIds.join(",")})`);
   const { data, error } = await supabase
     .from("friend_requests")
     .select(
       "id, post_id, applicant_login_id, applicant:profiles!applicant_login_id(display_name, avatar_image_url), post:friend_posts!post_id(title)",
     )
-    .in(
-      "post_id",
-      postIds.map((r: { id: string }) => r.id),
-    )
+    .or(filters.join(","))
     .eq("status", "pending")
     .neq("applicant_login_id", loginId)
     .order("created_at", { ascending: false });
@@ -198,7 +191,7 @@ export async function fetchPendingRequests(loginId: string): Promise<PendingRequ
     applicantName: row.applicant?.display_name ?? row.applicant_login_id,
     applicantAvatarUrl: row.applicant?.avatar_image_url ?? null,
     postTitle: row.post?.title ?? "",
-    postId: row.post_id,
+    postId: row.post_id ?? row.id,
   }));
 }
 
