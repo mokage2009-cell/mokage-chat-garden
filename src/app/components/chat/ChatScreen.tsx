@@ -105,7 +105,7 @@ export default function ChatScreen({ loginId, onClose }: ChatScreenProps) {
                 <Avatar name={req.applicantName} imageUrl={req.applicantAvatarUrl} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold text-slate-900">{req.applicantName}</p>
-                  <p className="truncate text-xs text-slate-500">「{req.postTitle}」に申請</p>
+                  <p className="truncate text-xs text-slate-500">{req.postTitle ? `「${req.postTitle}」に申請` : "フレンド申請が届いています"}</p>
                 </div>
                 <button
                   type="button"
