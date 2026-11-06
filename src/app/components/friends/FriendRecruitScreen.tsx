@@ -12,6 +12,8 @@ import {
   type PendingRequest,
 } from "@/app/lib/friends";
 
+const PAGE_SIZE = 8;
+
 type FriendRecruitScreenProps = {
   loginId: string;
   onClose: () => void;
@@ -27,6 +29,7 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
   const [applyError, setApplyError] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingRequest[]>([]);
   const [showPending, setShowPending] = useState(false);
+  const [listPage, setListPage] = useState(0);
   const [responding, setResponding] = useState<string | null>(null);
 
   useEffect(() => {
@@ -176,8 +179,23 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
             <p className="mt-1 text-sm text-slate-500">最初の投稿をしてみましょう</p>
           </section>
         ) : (
+          <>
+          {feed.posts.length > PAGE_SIZE && (
+            <div className="mb-4 flex justify-center gap-2">
+              {Array.from({ length: Math.ceil(feed.posts.length / PAGE_SIZE) }).map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => { setListPage(i); window.scrollTo({ top: 0 }); }}
+                  className={`h-9 min-w-9 rounded-full px-3 text-sm font-bold shadow-sm ring-1 ring-slate-200 ${listPage === i ? "bg-emerald-600 text-white" : "bg-white text-slate-700"}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
           <ul className="space-y-4">
-            {feed.posts.map((post) => (
+            {feed.posts.slice(listPage * PAGE_SIZE, listPage * PAGE_SIZE + PAGE_SIZE).map((post) => (
               <li key={post.id}>
                 <FriendPostCard
                   post={post}
@@ -190,6 +208,7 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
               </li>
             ))}
           </ul>
+          </>
         )}
       </div>
 
@@ -205,7 +224,7 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
       )}
 
       {selectedLoginId && (
-        <ProfileModal loginId={selectedLoginId} onClose={() => setSelectedLoginId(null)} />
+        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => setSelectedLoginId(null)} />
       )}
     </div>
   );
