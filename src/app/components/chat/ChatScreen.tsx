@@ -75,6 +75,7 @@ export default function ChatScreen({ loginId, onClose }: ChatScreenProps) {
             <button
               type="button"
               onClick={() => setShowPending((v) => !v)}
+              aria-expanded={showPending}
               className="relative flex items-center gap-1.5 rounded-2xl bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 active:scale-95"
             >
               <Bell className="h-4 w-4" />
@@ -93,13 +94,13 @@ export default function ChatScreen({ loginId, onClose }: ChatScreenProps) {
           </p>
         )}
 
-        {showPending && pending.length > 0 && (
-          <section className="mb-5 space-y-3">
+        {pending.length > 0 && (
+          <section className="mb-5 space-y-3 rounded-3xl border-2 border-amber-300 bg-amber-50 p-4">
             <h2 className="font-bold text-slate-900">フレンド申請</h2>
             {pending.map((req) => (
               <div
                 key={req.requestId}
-                className="flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200/70"
+                className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-amber-200"
               >
                 <Avatar name={req.applicantName} imageUrl={req.applicantAvatarUrl} />
                 <div className="min-w-0 flex-1">
@@ -112,7 +113,7 @@ export default function ChatScreen({ loginId, onClose }: ChatScreenProps) {
                   disabled={responding === req.requestId}
                   className="rounded-xl bg-cyan-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
                 >
-                  承諾
+                  受諾
                 </button>
                 <button
                   type="button"
