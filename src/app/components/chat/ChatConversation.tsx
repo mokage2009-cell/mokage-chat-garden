@@ -515,7 +515,7 @@ export default function ChatConversation({
       )}
 
       {selectedLoginId && (
-        <ProfileModal loginId={selectedLoginId} onClose={() => setSelectedLoginId(null)} />
+        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => setSelectedLoginId(null)} />
       )}
     </div>
   );

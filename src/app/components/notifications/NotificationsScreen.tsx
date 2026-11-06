@@ -178,7 +178,7 @@ export default function NotificationsScreen({ loginId, onClose }: NotificationsS
       </div>
 
       {selectedLoginId && (
-        <ProfileModal loginId={selectedLoginId} onClose={() => setSelectedLoginId(null)} />
+        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => setSelectedLoginId(null)} />
       )}
     </div>
   );
