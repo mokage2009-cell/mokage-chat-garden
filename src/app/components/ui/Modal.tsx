@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 
 type ModalProps = {
   label: string;
@@ -16,7 +17,8 @@ export default function Modal({ label, onClose, children }: ModalProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  return (
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div
       className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -38,6 +40,7 @@ export default function Modal({ label, onClose, children }: ModalProps) {
         </button>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

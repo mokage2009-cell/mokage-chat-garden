@@ -233,7 +233,7 @@ export default function SearchScreen({ loginId, onClose }: SearchScreenProps) {
         />
       )}
       {selectedLoginId && (
-        <ProfileModal loginId={selectedLoginId} onClose={() => setSelectedLoginId(null)} />
+        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => setSelectedLoginId(null)} />
       )}
     </div>
   );
