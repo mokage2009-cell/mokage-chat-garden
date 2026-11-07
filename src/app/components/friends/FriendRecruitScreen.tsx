@@ -3,8 +3,11 @@ import { ArrowLeft, Bell, Plus, UserRound } from "lucide-react";
 import CreatePostModal from "@/app/components/friends/CreatePostModal";
 import FriendPostCard from "@/app/components/friends/FriendPostCard";
 import ProfileModal from "@/app/components/profile/ProfileModal";
+import { Button } from "@/components/ui/button";
+import { compactPages } from "@/app/lib/friendshipRules";
 import {
   applyToFriendPost,
+  deleteFriendPost,
   fetchFriendFeed,
   fetchPendingRequests,
   respondToFriendRequest,
@@ -39,6 +42,7 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
         if (!isActive) return;
         setFeed(loaded);
         setPending(loadedPending);
+        setListPage(page => Math.min(page, Math.max(0, Math.ceil(loaded.posts.length / PAGE_SIZE) - 1)));
         setLoadError(null);
       })
       .catch((err: Error) => {
@@ -72,6 +76,14 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
     } finally {
       setResponding(null);
     }
+  };
+
+  const handleDelete = async (postId: string) => {
+    if (!window.confirm("この募集投稿を削除しますか？")) return;
+    try {
+      await deleteFriendPost(postId, loginId);
+      setReloadKey(key => key + 1);
+    } catch (err) { setApplyError(err instanceof Error ? err.message : "投稿を削除できませんでした"); }
   };
 
   return (
@@ -181,18 +193,18 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
         ) : (
           <>
           {feed.posts.length > PAGE_SIZE && (
-            <div className="mb-4 flex justify-center gap-2">
-              {Array.from({ length: Math.ceil(feed.posts.length / PAGE_SIZE) }).map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => { setListPage(i); window.scrollTo({ top: 0 }); }}
-                  className={`h-9 min-w-9 rounded-full px-3 text-sm font-bold shadow-sm ring-1 ring-slate-200 ${listPage === i ? "bg-emerald-600 text-white" : "bg-white text-slate-700"}`}
-                >
-                  {i + 1}
-                </button>
+            <nav aria-label="募集ページ" className="mb-4 flex flex-wrap items-center justify-center gap-1">
+              {compactPages(listPage + 1, Math.ceil(feed.posts.length / PAGE_SIZE)).map((page, index) => (
+                page === "..." ? <span key={`gap-${index}`} className="px-0.5 text-sub">...</span> : <Button
+                  key={page}
+                  aria-label={`${page}ページ目`}
+                  aria-current={listPage + 1 === page ? "page" : undefined}
+                  variant={listPage + 1 === page ? "default" : "outline"}
+                  onClick={() => { setListPage(page - 1); window.scrollTo({ top: 0 }); }}
+                  className="h-8 min-w-8 px-1.5 text-xs font-bold"
+                >{page}</Button>
               ))}
-            </div>
+            </nav>
           )}
           <ul className="space-y-4">
             {feed.posts.slice(listPage * PAGE_SIZE, listPage * PAGE_SIZE + PAGE_SIZE).map((post) => (
@@ -201,9 +213,11 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
                   post={post}
                   isOwn={post.authorLoginId === loginId}
                   isApplied={feed.appliedPostIds.includes(post.id)}
+                  isFriend={feed.friendLoginIds.includes(post.authorLoginId)}
                   isApplying={applyingPostId === post.id}
                   onOpenProfile={setSelectedLoginId}
                   onApply={handleApply}
+                  onDelete={handleDelete}
                 />
               </li>
             ))}
@@ -224,7 +238,7 @@ export default function FriendRecruitScreen({ loginId, onClose }: FriendRecruitS
       )}
 
       {selectedLoginId && (
-        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => setSelectedLoginId(null)} />
+        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => { setSelectedLoginId(null); setReloadKey(key => key + 1); }} />
       )}
     </div>
   );
