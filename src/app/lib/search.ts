@@ -1,5 +1,7 @@
 import { supabase } from "@/app/lib/supabase";
 import { GENDER_OPTIONS, type Gender } from "@/app/lib/profile";
+import { fetchRelationships } from "@/app/lib/friends";
+import { relationshipStatus } from "@/app/lib/friendshipRules";
 
 export const SEARCH_PAGE_SIZE = 20;
 
@@ -102,20 +104,7 @@ export async function searchProfiles(
     };
   }
 
-  const targetIds = profiles.map((p) => p.login_id);
-
-  const { data: requestData } = await supabase
-    .from("friend_requests")
-    .select("target_login_id, post_id, status")
-    .eq("applicant_login_id", loginId)
-    .in("target_login_id", targetIds);
-
-  const requestMap = new Map<string, string>();
-  for (const row of (requestData as RequestRow[] | null) ?? []) {
-    if (row.target_login_id) {
-      requestMap.set(row.target_login_id, row.status);
-    }
-  }
+  const relationships = await fetchRelationships(loginId);
 
   const results: SearchResult[] = profiles.map((row) => ({
     loginId: row.login_id,
@@ -125,7 +114,7 @@ export async function searchProfiles(
     hobbies: row.hobbies ?? [],
     avatarUrl: row.avatar_image_url,
     bio: row.bio,
-    requestStatus: (requestMap.get(row.login_id) as SearchResult["requestStatus"]) ?? "none",
+    requestStatus: relationshipStatus(relationships, loginId, row.login_id),
   }));
 
   return {

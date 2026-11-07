@@ -233,7 +233,7 @@ export default function SearchScreen({ loginId, onClose }: SearchScreenProps) {
         />
       )}
       {selectedLoginId && (
-        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => setSelectedLoginId(null)} />
+        <ProfileModal loginId={selectedLoginId} viewerLoginId={loginId} onClose={() => { setSelectedLoginId(null); runSearch(); }} />
       )}
     </div>
   );
@@ -306,7 +306,7 @@ function SearchResultCard({
         )}
         {person.requestStatus === "accepted" && (
           <span className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-100 py-2.5 text-sm font-bold text-emerald-700">
-            フレンド成立済み
+            フレンド済み
           </span>
         )}
         {person.requestStatus === "rejected" && (

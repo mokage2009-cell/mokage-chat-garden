@@ -1,4 +1,23 @@
 import { supabase } from "@/app/lib/supabase";
+import { relationshipStatus, type RelationshipRow } from "@/app/lib/friendshipRules";
+
+export async function fetchRelationships(loginId: string): Promise<RelationshipRow[]> {
+  const { data, error } = await supabase.from("friend_requests")
+    .select("applicant_login_id, target_login_id, status, post:friend_posts!post_id(author_login_id)");
+  if (error) throw new Error("フレンド状態を確認できませんでした");
+  return ((data ?? []) as unknown as RelationshipRow[]).filter(row =>
+    row.applicant_login_id === loginId || (row.target_login_id ?? row.post?.author_login_id) === loginId);
+}
+
+export async function removeFriend(otherLoginId: string): Promise<void> {
+  const { error } = await supabase.rpc("remove_friend", { p_other_login_id: otherLoginId });
+  if (error) throw new Error("フレンドを削除できませんでした");
+}
+
+export async function deleteFriendPost(postId: string, loginId: string): Promise<void> {
+  const { data, error } = await supabase.from("friend_posts").delete().eq("id", postId).eq("author_login_id", loginId).select("id");
+  if (error || !data?.length) throw new Error("投稿を削除できませんでした");
+}
 
 export const FRIEND_POST_LIMITS = {
   titleMax: 40,
@@ -27,6 +46,7 @@ type FriendPostRow = {
 export type FriendFeed = {
   posts: FriendPost[];
   appliedPostIds: string[];
+  friendLoginIds: string[];
 };
 
 const UNIQUE_VIOLATION = "23505";
@@ -44,15 +64,16 @@ function toFriendPost(row: FriendPostRow): FriendPost {
 }
 
 export async function fetchFriendFeed(loginId: string): Promise<FriendFeed> {
-  const [postsResult, requestsResult] = await Promise.all([
+  const [postsResult, requestsResult, relationships] = await Promise.all([
     supabase
       .from("friend_posts")
       .select(
         "id, author_login_id, title, message, created_at, author:profiles!author_login_id(display_name, avatar_image_url)",
       )
       .order("created_at", { ascending: false })
-      .limit(100),
+      ,
     supabase.from("friend_requests").select("post_id").eq("applicant_login_id", loginId),
+    fetchRelationships(loginId),
   ]);
 
   if (postsResult.error) throw new Error(postsResult.error.message);
@@ -61,6 +82,7 @@ export async function fetchFriendFeed(loginId: string): Promise<FriendFeed> {
   return {
     posts: (postsResult.data as unknown as FriendPostRow[]).map(toFriendPost),
     appliedPostIds: (requestsResult.data as { post_id: string }[]).map((row) => row.post_id),
+    friendLoginIds: (postsResult.data as unknown as FriendPostRow[]).filter(row => relationshipStatus(relationships, loginId, row.author_login_id) === "accepted").map(row => row.author_login_id),
   };
 }
 
@@ -103,6 +125,7 @@ type AcceptedRow = {
   post_id: string | null;
   applicant_login_id: string;
   target_login_id: string | null;
+  conversation_scope_id: string | null;
   post: { author_login_id: string } | null;
 };
 
@@ -115,10 +138,10 @@ export async function fetchFriends(loginId: string): Promise<Friend[]> {
   if (myPostIds.length) filters.push(`post_id.in.(${myPostIds.join(",")})`);
   const { data, error } = await supabase
     .from("friend_requests")
-    .select("id, post_id, applicant_login_id, target_login_id, post:friend_posts!post_id(author_login_id)")
+    .select("id, post_id, conversation_scope_id, applicant_login_id, target_login_id, post:friend_posts!post_id(author_login_id)")
     .eq("status", "accepted")
     .or(filters.join(","))
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
 
   const pairs = (data as unknown as AcceptedRow[])
@@ -127,7 +150,7 @@ export async function fetchFriends(loginId: string): Promise<Friend[]> {
         row.applicant_login_id === loginId
           ? (row.target_login_id ?? row.post?.author_login_id ?? null)
           : row.applicant_login_id;
-      return other && other !== loginId ? { other, scopeId: row.post_id ?? row.id } : null;
+      return other && other !== loginId ? { other, scopeId: row.conversation_scope_id ?? row.post_id ?? row.id } : null;
     })
     .filter((x): x is { other: string; scopeId: string } => x !== null);
 
