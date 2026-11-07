@@ -52,8 +52,9 @@ export default function ChatScreen({ loginId, onClose }: ChatScreenProps) {
         scopeId={selected.postId}
         loginId={loginId}
         title={selected.displayName}
+        partnerLoginId={selected.loginId}
         subtitle=""
-        onBack={() => setSelected(null)}
+        onBack={() => { setSelected(null); reload(); }}
       />
     );
   }

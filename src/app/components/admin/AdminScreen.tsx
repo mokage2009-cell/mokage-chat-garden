@@ -398,10 +398,10 @@ function ChatViewer({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchChatMessagesByScope(partner.scopeId)
+    fetchChatMessagesByScope(partner, account.loginId)
       .then(setMessages)
       .catch((err: Error) => setError(err.message));
-  }, [partner.scopeId]);
+  }, [partner, account.loginId]);
 
   return (
     <div className="animate-screen-in flex min-h-screen flex-col bg-sky-50">

@@ -40,6 +40,7 @@ type ChatConversationProps = {
   scopeId: string;
   loginId: string;
   title: string;
+  partnerLoginId?: string;
   subtitle?: string;
   onBack: () => void;
 };
@@ -59,6 +60,7 @@ export default function ChatConversation({
   scopeId,
   loginId,
   title,
+  partnerLoginId,
   subtitle,
   onBack,
 }: ChatConversationProps) {
@@ -329,7 +331,8 @@ export default function ChatConversation({
         </button>
         <button
           type="button"
-          onClick={() => title && setSelectedLoginId(title)}
+          onClick={() => { if (partnerLoginId) setSelectedLoginId(partnerLoginId); }}
+          disabled={!partnerLoginId}
           className="min-w-0 flex-1 text-left"
         >
           <p className="truncate font-bold text-slate-900">{title}</p>

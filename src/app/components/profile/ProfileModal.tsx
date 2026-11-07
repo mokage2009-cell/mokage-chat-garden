@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { UserPlus } from "lucide-react";
+import { UserPlus, UserMinus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Modal from "@/app/components/ui/Modal";
 import ProfileCard from "@/app/components/profile/ProfileCard";
 import { fetchProfile, type Profile } from "@/app/lib/profile";
-import { supabase } from "@/app/lib/supabase";
+import { fetchRelationships, removeFriend } from "@/app/lib/friends";
+import { relationshipStatus } from "@/app/lib/friendshipRules";
 import { sendDirectRequest } from "@/app/lib/search";
 
 type ProfileModalProps = {
@@ -12,7 +14,7 @@ type ProfileModalProps = {
   onClose: () => void;
 };
 
-type Status = "loading" | "none" | "pending" | "friends";
+type Status = "loading" | "none" | "pending" | "accepted";
 
 export default function ProfileModal({ loginId, viewerLoginId, onClose }: ProfileModalProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -20,6 +22,7 @@ export default function ProfileModal({ loginId, viewerLoginId, onClose }: Profil
   const [status, setStatus] = useState<Status>("loading");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [removeStep, setRemoveStep] = useState<0 | 1 | 2>(0);
   const showRequest = !!viewerLoginId && viewerLoginId !== loginId;
 
   useEffect(() => {
@@ -32,29 +35,9 @@ export default function ProfileModal({ loginId, viewerLoginId, onClose }: Profil
         if (isActive) setError(err.message);
       });
     if (showRequest) {
-      supabase
-        .from("friend_requests")
-        .select("status, applicant_login_id, target_login_id, post_id, friend_posts(author_login_id)")
-        .or(`applicant_login_id.eq.${viewerLoginId},applicant_login_id.eq.${loginId}`)
-        .then(({ data }) => {
-          if (!isActive) return;
-          let s: Status = "none";
-          for (const r of (data ?? []) as unknown as Array<{
-            status: string;
-            applicant_login_id: string;
-            target_login_id: string | null;
-            friend_posts: { author_login_id: string } | null;
-          }>) {
-            const target = r.target_login_id ?? r.friend_posts?.author_login_id;
-            const pair =
-              (r.applicant_login_id === viewerLoginId && target === loginId) ||
-              (r.applicant_login_id === loginId && target === viewerLoginId);
-            if (!pair) continue;
-            if (r.status === "accepted") s = "friends";
-            else if (r.status === "pending" && s !== "friends") s = "pending";
-          }
-          setStatus(s);
-        });
+      fetchRelationships(viewerLoginId ?? "").then(rows => {
+        if (isActive && viewerLoginId) setStatus(relationshipStatus(rows, viewerLoginId, loginId));
+      }).catch(() => { if (isActive) setSendError("フレンド状態を確認できませんでした"); });
     }
     return () => {
       isActive = false;
@@ -75,31 +58,46 @@ export default function ProfileModal({ loginId, viewerLoginId, onClose }: Profil
     }
   };
 
+  const handleRemove = async () => {
+    setSending(true);
+    setSendError(null);
+    try {
+      await removeFriend(loginId);
+      setStatus("none");
+      setRemoveStep(0);
+    } catch (err) {
+      setSendError(err instanceof Error ? err.message : "フレンドを削除できませんでした");
+    } finally { setSending(false); }
+  };
+
   return (
     <Modal label="プロフィール" onClose={onClose}>
       {profile ? (
         <>
-          <ProfileCard profile={profile} hideLoginId />
-          {showRequest && status !== "loading" && (
-            <div className="px-6 pb-6">
-              {sendError && <p className="mb-2 text-sm text-rose-600">{sendError}</p>}
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={status !== "none" || sending}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-3 font-bold text-white shadow-md disabled:from-slate-300 disabled:to-slate-400"
-              >
-                <UserPlus className="h-5 w-5" />
-                {status === "friends"
-                  ? "フレンドです"
-                  : status === "pending"
-                    ? "申請済み"
-                    : sending
-                      ? "送信中…"
-                      : "フレンド申請する！"}
-              </button>
+          <ProfileCard profile={profile} hideLoginId nameAction={showRequest && status !== "loading" ? (
+            <div className="flex shrink-0 flex-col items-end gap-1.5">
+              {status === "accepted" ? <>
+                <span className="text-xs font-bold text-accent">フレンド済み</span>
+                <Button size="sm" variant="outline" onClick={() => setRemoveStep(1)} disabled={sending}>
+                  <UserMinus />フレンド削除
+                </Button>
+              </> : <Button size="sm" onClick={handleSend} disabled={status !== "none" || sending} className="h-auto max-w-36 whitespace-normal py-2">
+                <UserPlus />{status === "pending" ? "申請済み" : sending ? "送信中…" : "フレンド申請する！"}
+              </Button>}
             </div>
-          )}
+          ) : undefined} />
+          {sendError && <p role="alert" className="px-6 pb-4 text-sm text-foreground">{sendError}</p>}
+          {removeStep > 0 && <Modal label="フレンド削除の確認" onClose={() => { if (!sending) setRemoveStep(0); }}>
+            <div className="space-y-4 p-6 pt-12 text-foreground">
+              <h2 className="font-bold">{removeStep === 1 ? "フレンドを削除しますか？" : "本当にフレンドを削除しますか？"}</h2>
+              <p className="break-words text-sm">{profile.displayName}さんとのフレンド関係を双方から解除します。</p>
+              {sendError && <p role="alert">{sendError}</p>}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" disabled={sending} onClick={() => setRemoveStep(0)}>キャンセル</Button>
+                <Button disabled={sending} onClick={() => removeStep === 1 ? setRemoveStep(2) : handleRemove()}>{removeStep === 1 ? "次へ" : sending ? "削除中…" : "削除する"}</Button>
+              </div>
+            </div>
+          </Modal>}
         </>
       ) : (
         <p

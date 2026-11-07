@@ -1,0 +1,6 @@
+- [ ] Make friendship status mutual and prevent duplicate requests; add double-confirmed removal.
+- [ ] Fix directional admin conversation history and chat header profiles.
+- [ ] Keep IDs visible in admin but never display or return passwords.
+- [ ] Move profile friendship controls beside the name.
+- [ ] Compact recruitment pagination and allow authors to delete posts.
+- [ ] Test rules and verify authenticated UI flows.

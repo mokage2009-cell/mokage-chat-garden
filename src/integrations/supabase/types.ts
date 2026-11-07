@@ -235,6 +235,7 @@ export type Database = {
       friend_requests: {
         Row: {
           applicant_login_id: string
+          conversation_scope_id: string | null
           created_at: string
           id: string
           post_id: string | null
@@ -243,6 +244,7 @@ export type Database = {
         }
         Insert: {
           applicant_login_id: string
+          conversation_scope_id?: string | null
           created_at?: string
           id?: string
           post_id?: string | null
@@ -251,6 +253,7 @@ export type Database = {
         }
         Update: {
           applicant_login_id?: string
+          conversation_scope_id?: string | null
           created_at?: string
           id?: string
           post_id?: string | null
@@ -478,6 +481,7 @@ export type Database = {
         Args: { p_actor_login_id: string; p_membership_id: string }
         Returns: undefined
       }
+      remove_friend: { Args: { p_other_login_id: string }; Returns: undefined }
       update_community_join_mode: {
         Args: {
           p_actor_login_id: string
