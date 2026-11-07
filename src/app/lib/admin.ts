@@ -1,4 +1,5 @@
 import { supabase } from "@/app/lib/supabase";
+import { adminConversationPairs, type AdminRelationship, type AdminScopeMessage } from "@/app/lib/adminChatRules";
 
 export type AdminAccount = {
   loginId: string;
@@ -36,82 +37,43 @@ export type ChatPartner = {
   displayName: string;
   avatarUrl: string | null;
   scopeId: string;
+  scopeIds: string[];
   context: "dm" | "community" | "timeline";
   lastMessageAt: string;
 };
 
-type ScopeRow = {
-  scope_id: string;
-  context: string;
-  created_at: string;
-  partner: { display_name: string; avatar_image_url: string | null } | null;
-  partner_login_id: string;
-};
-
 export async function fetchChatPartners(loginId: string): Promise<ChatPartner[]> {
-  const { data, error } = await supabase
-    .from("chat_messages")
-    .select(
-      "scope_id, context, created_at, sender_login_id, partner:profiles!sender_login_id(display_name, avatar_image_url)",
-    )
-    .or(`sender_login_id.eq.${loginId}`)
-    .order("created_at", { ascending: false })
-    .limit(500);
-
-  if (error) throw new Error("チャット相手を取得できませんでした");
-
-  const dmPartners = new Map<string, ChatPartner>();
-
-  for (const row of (data as unknown as ScopeRow[]) ?? []) {
-    const partnerLoginId = row.partner_login_id;
-    if (!partnerLoginId || partnerLoginId === loginId) continue;
-    const key = `${row.context}:${row.scope_id}:${partnerLoginId}`;
-    if (!dmPartners.has(key)) {
-      dmPartners.set(key, {
-        loginId: partnerLoginId,
-        displayName: row.partner?.display_name ?? partnerLoginId,
-        avatarUrl: row.partner?.avatar_image_url ?? null,
-        scopeId: row.scope_id,
-        context: row.context as ChatPartner["context"],
-        lastMessageAt: row.created_at,
-      });
+  const [requests, messages, profiles] = await Promise.all([
+    supabase.from("friend_requests").select("id, post_id, conversation_scope_id, applicant_login_id, target_login_id, post:friend_posts!post_id(author_login_id)"),
+    supabase.from("chat_messages").select("scope_id, context, created_at, sender_login_id, sender:profiles!sender_login_id(display_name, avatar_image_url)").order("created_at", { ascending: false }),
+    supabase.from("profiles").select("login_id, display_name, avatar_image_url"),
+  ]);
+  if (requests.error || messages.error || profiles.error) throw new Error("チャット相手を取得できませんでした");
+  const rows = (messages.data ?? []) as unknown as AdminScopeMessage[];
+  const pairs = adminConversationPairs(loginId, (requests.data ?? []) as unknown as AdminRelationship[]);
+  // A shared legacy recruitment scope may hold several conversations: filter DM senders when reading history.
+  for (const msg of rows.filter(r => r.context === "dm" && r.sender_login_id === loginId)) {
+    for (const other of rows.filter(r => r.context === "dm" && r.scope_id === msg.scope_id && r.sender_login_id !== loginId)) {
+      const scopes = pairs.get(other.sender_login_id) ?? new Set<string>();
+      scopes.add(msg.scope_id);
+      pairs.set(other.sender_login_id, scopes);
     }
   }
-
-  const { data: incomingData, error: incomingError } = await supabase
-    .from("chat_messages")
-    .select(
-      "scope_id, context, created_at, sender_login_id, sender:profiles!sender_login_id(display_name, avatar_image_url)",
-    )
-    .neq("sender_login_id", loginId)
-    .order("created_at", { ascending: false })
-    .limit(500);
-
-  if (!incomingError) {
-    for (const row of (incomingData as unknown as {
-      scope_id: string;
-      context: string;
-      created_at: string;
-      sender_login_id: string;
-      sender: { display_name: string; avatar_image_url: string | null } | null;
-    }[]) ?? []) {
-      const key = `${row.context}:${row.scope_id}:${row.sender_login_id}`;
-      if (!dmPartners.has(key)) {
-        dmPartners.set(key, {
-          loginId: row.sender_login_id,
-          displayName: row.sender?.display_name ?? row.sender_login_id,
-          avatarUrl: row.sender?.avatar_image_url ?? null,
-          scopeId: row.scope_id,
-          context: row.context as ChatPartner["context"],
-          lastMessageAt: row.created_at,
-        });
-      }
-    }
+  const partners: ChatPartner[] = [];
+  for (const [other, scopes] of pairs) {
+    const scopeIds = [...scopes];
+    const latest = rows.find(r => r.context === "dm" && scopes.has(r.scope_id) && [loginId, other].includes(r.sender_login_id));
+    if (!latest) continue;
+    const profile = profiles.data?.find(p => p.login_id === other);
+    partners.push({ loginId: other, displayName: profile?.display_name ?? other, avatarUrl: profile?.avatar_image_url ?? null, scopeId: latest.scope_id, scopeIds, context: "dm", lastMessageAt: latest.created_at });
   }
-
-  return Array.from(dmPartners.values()).sort((a, b) =>
-    b.lastMessageAt.localeCompare(a.lastMessageAt),
-  );
+  const ownGroupScopes = new Set(rows.filter(r => r.context !== "dm" && r.sender_login_id === loginId).map(r => `${r.context}:${r.scope_id}`));
+  for (const row of rows) {
+    if (row.context === "dm" || row.sender_login_id === loginId || !ownGroupScopes.has(`${row.context}:${row.scope_id}`)) continue;
+    if (partners.some(p => p.context === row.context && p.scopeId === row.scope_id && p.loginId === row.sender_login_id)) continue;
+    partners.push({ loginId: row.sender_login_id, displayName: row.sender?.display_name ?? row.sender_login_id, avatarUrl: row.sender?.avatar_image_url ?? null, scopeId: row.scope_id, scopeIds: [row.scope_id], context: row.context, lastMessageAt: row.created_at });
+  }
+  return partners.sort((a,b) => b.lastMessageAt.localeCompare(a.lastMessageAt));
 }
 
 export type AdminChatMessage = {
@@ -124,15 +86,16 @@ export type AdminChatMessage = {
   createdAt: string;
 };
 
-export async function fetchChatMessagesByScope(scopeId: string): Promise<AdminChatMessage[]> {
-  const { data, error } = await supabase
+export async function fetchChatMessagesByScope(partner: ChatPartner, accountLoginId: string): Promise<AdminChatMessage[]> {
+  let query = supabase
     .from("chat_messages")
     .select(
       "id, sender_login_id, body, media_url, media_type, created_at, sender:profiles!sender_login_id(display_name)",
     )
-    .eq("scope_id", scopeId)
-    .order("created_at", { ascending: true })
-    .limit(500);
+    .in("scope_id", partner.scopeIds)
+    .eq("context", partner.context);
+  if (partner.context === "dm") query = query.in("sender_login_id", [accountLoginId, partner.loginId]);
+  const { data, error } = await query.order("created_at", { ascending: true });
 
   if (error) throw new Error("メッセージを取得できませんでした");
 
