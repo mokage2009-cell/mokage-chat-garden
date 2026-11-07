@@ -39,7 +39,7 @@ export default function ProfileModal({ loginId, viewerLoginId, onClose }: Profil
         .then(({ data }) => {
           if (!isActive) return;
           let s: Status = "none";
-          for (const r of (data ?? []) as Array<{
+          for (const r of (data ?? []) as unknown as Array<{
             status: string;
             applicant_login_id: string;
             target_login_id: string | null;
