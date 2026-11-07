@@ -47,11 +47,11 @@ export default function ProfileCard({ profile, coverAction, nameAction, hideLogi
 
       <div className="px-6 pb-6 pt-14">
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="break-words text-2xl font-bold tracking-tight text-slate-900">
               {profile.displayName}
             </h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {!hideLoginId && <p className="text-sm text-slate-500">@{profile.loginId}</p>}
               <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-xs font-bold text-cyan-700">
                 No.{String(profile.accountNumber).padStart(4, "0")}
