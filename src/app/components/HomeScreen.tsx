@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   Bell,
   Check,
   Globe,
+  Images,
+  Loader2,
   Megaphone,
   MessageCircle,
   MessageSquare,
@@ -15,15 +17,17 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import ProfilePanel from "@/app/components/profile/ProfilePanel";
-import FriendRecruitScreen from "@/app/components/friends/FriendRecruitScreen";
-import CommunityScreen from "@/app/components/communities/CommunityScreen";
-import CommunityChatScreen from "@/app/components/communities/CommunityChatScreen";
-import TimelineScreen from "@/app/components/timeline/TimelineScreen";
-import ChatScreen from "@/app/components/chat/ChatScreen";
-import NotificationsScreen from "@/app/components/notifications/NotificationsScreen";
-import SearchScreen from "@/app/components/search/SearchScreen";
-import ImageGenScreen from "@/app/components/imageGen/ImageGenScreen";
+const ProfilePanel = lazy(() => import("@/app/components/profile/ProfilePanel"));
+const FriendRecruitScreen = lazy(() => import("@/app/components/friends/FriendRecruitScreen"));
+const CommunityScreen = lazy(() => import("@/app/components/communities/CommunityScreen"));
+const CommunityChatScreen = lazy(() => import("@/app/components/communities/CommunityChatScreen"));
+const TimelineScreen = lazy(() => import("@/app/components/timeline/TimelineScreen"));
+const ChatScreen = lazy(() => import("@/app/components/chat/ChatScreen"));
+const NotificationsScreen = lazy(() => import("@/app/components/notifications/NotificationsScreen"));
+const SearchScreen = lazy(() => import("@/app/components/search/SearchScreen"));
+const ImageGenScreen = lazy(() => import("@/app/components/imageGen/ImageGenScreen"));
+const GalleryScreen = lazy(() => import("@/app/components/gallery/GalleryScreen"));
+import { Button } from '@/components/ui/button';
 import SettingsModal from "@/app/components/SettingsModal";
 import Modal from "@/app/components/ui/Modal";
 import { useTheme, applyTheme, getStoredThemeId, THEMES, type Theme } from "@/app/lib/theme";
@@ -104,6 +108,12 @@ type HomeScreenProps = {
 };
 
 export default function HomeScreen({
+  ...props
+}: HomeScreenProps) {
+  return <Suspense fallback={<div className="flex min-h-dvh items-center justify-center bg-app"><Loader2 aria-label="読み込み中" className="animate-spin text-primary" /></div>}><HomeContent {...props} /></Suspense>;
+}
+
+function HomeContent({
   user,
   onLogout,
   isOwner = false,
@@ -122,6 +132,7 @@ export default function HomeScreen({
     | "notifications"
     | "search"
     | "imagegen"
+    | "gallery"
     | null
   >(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -130,8 +141,8 @@ export default function HomeScreen({
 
   useEffect(() => {
     const stored = getStoredThemeId();
-    const theme = THEMES.find((t) => t.id === stored) ?? THEMES[0]!;
-    applyTheme(theme);
+    const theme = THEMES.find((t) => t.id === stored) ?? THEMES[0];
+    if (theme) applyTheme(theme);
   }, []);
 
   if (overlay === "profile") {
@@ -171,6 +182,8 @@ export default function HomeScreen({
   if (overlay === "imagegen") {
     return <ImageGenScreen loginId={user.id} onClose={() => setOverlay(null)} />;
   }
+
+  if (overlay === 'gallery') return <GalleryScreen loginId={user.id} onClose={() => setOverlay(null)} />;
 
   if (overlay === "search") {
     return <SearchScreen loginId={user.id} onClose={() => setOverlay(null)} />;
@@ -266,6 +279,10 @@ export default function HomeScreen({
                 }}
                 onClick={() => setOverlay("imagegen")}
               />
+              <Button variant="ghost" onClick={() => setOverlay('gallery')} className="flex h-auto min-h-36 flex-col items-start justify-between rounded-3xl bg-surface p-5 text-left text-foreground shadow-sm">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gallery text-gallery-accent"><Images className="size-6" /></span>
+                <span className="pt-4 text-[15px] font-bold">ギャラリー</span>
+              </Button>
             </div>
           </section>
         </div>

@@ -1,4 +1,8 @@
 - [x] Make friendship status mutual and prevent duplicate requests; add double-confirmed removal.
+- [ ] Collapse timeline media until opened.
+- [ ] Expand long-text and concurrent media chat sending.
+- [ ] Add shared gallery with independent URL/media filters and paged history.
+- [ ] Improve safe loading/account performance and verify flows.
 - [x] Fix directional admin conversation history and chat header profiles.
 - [x] Keep IDs visible in admin but never display or return passwords (already handled by auth).
 - [x] Move profile friendship controls beside the name.

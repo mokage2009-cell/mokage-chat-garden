@@ -1,5 +1,6 @@
 import { Trash2, UserRound } from "lucide-react";
 import type { TimelinePost } from "@/app/lib/timeline";
+import CollapsibleMedia from './CollapsibleMedia';
 
 type TimelinePostCardProps = {
   post: TimelinePost;
@@ -59,15 +60,7 @@ export default function TimelinePostCard({
       )}
       {post.media.length > 0 && (
         <div className={`mt-3 grid gap-1.5 ${post.media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
-          {post.media.map((m) =>
-            m.type === "video" ? (
-              <video key={m.url} src={m.url} controls playsInline className="w-full rounded-xl bg-slate-900" />
-            ) : (
-              <a key={m.url} href={m.url} target="_blank" rel="noreferrer">
-                <img src={m.url} alt="" className="aspect-square w-full rounded-xl object-cover" />
-              </a>
-            ),
-          )}
+          {post.media.map((m) => <CollapsibleMedia key={m.url} url={m.url} video={m.type === 'video'} />)}
         </div>
       )}
     </article>

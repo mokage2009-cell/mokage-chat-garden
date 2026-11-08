@@ -1,7 +1,9 @@
 import { supabase, signedUrl } from "@/app/lib/supabase";
+import { CHAT_TEXT_MAX, MEDIA_BATCH_MAX, mapMediaBatch, validateChatText } from './mediaRules';
 
 export const CHAT_LIMITS = {
-  textMax: 10000,
+  textMax: CHAT_TEXT_MAX,
+  mediaMax: MEDIA_BATCH_MAX,
   mediaMaxBytes: 100 * 1024 * 1024,
 } as const;
 
@@ -62,18 +64,18 @@ function toMessage(row: ChatMessageRow): ChatMessage {
   };
 }
 
-export async function fetchMessages(context: ChatContext, scopeId: string): Promise<ChatMessage[]> {
-  const { data, error } = await supabase
+export async function fetchMessages(context: ChatContext, scopeId: string, before?: string): Promise<ChatMessage[]> {
+  let query = supabase
     .from("chat_messages")
     .select(
       "id, context, scope_id, sender_login_id, body, media_url, media_type, call_type, call_duration_sec, call_status, created_at, sender:profiles!sender_login_id(display_name, avatar_image_url)",
     )
     .eq("context", context)
-    .eq("scope_id", scopeId)
-    .order("created_at", { ascending: true })
-    .limit(200);
+    .eq("scope_id", scopeId);
+  if (before) query = query.lt('created_at', before);
+  const { data, error } = await query.order("created_at", { ascending: false }).limit(50);
   if (error) throw new Error("メッセージを読み込めませんでした");
-  return (data as unknown as ChatMessageRow[]).map(toMessage);
+  return (data as unknown as ChatMessageRow[]).map(toMessage).reverse();
 }
 
 export async function sendTextMessage(
@@ -82,6 +84,8 @@ export async function sendTextMessage(
   senderLoginId: string,
   body: string,
 ): Promise<void> {
+  const validation = validateChatText(body);
+  if (validation) throw new Error(validation);
   const { error } = await supabase.from("chat_messages").insert({
     context,
     scope_id: scopeId,
@@ -107,6 +111,14 @@ export async function sendMediaMessage(
     media_type: file.type,
   });
   if (error) throw new Error("メディアを送信できませんでした");
+}
+
+export async function sendMediaBatch(context: ChatContext, scopeId: string, loginId: string, files: File[]): Promise<void> {
+  if (files.length > MEDIA_BATCH_MAX) throw new Error(`写真・動画は${MEDIA_BATCH_MAX}個までです`);
+  for (const file of files) { const error = validateMediaFile(file); if (error) throw new Error(error); }
+  const urls = await mapMediaBatch(files, file => uploadChatMedia(context, scopeId, loginId, file));
+  const { error } = await supabase.from('chat_messages').insert(files.map((file, index) => ({ context, scope_id: scopeId, sender_login_id: loginId, body: '', media_url: urls[index], media_type: file.type })));
+  if (error) throw new Error('メディアを送信できませんでした');
 }
 
 export async function sendCallMessage(

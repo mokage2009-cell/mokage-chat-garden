@@ -25,15 +25,15 @@ import {
   isImageMessage,
   isVideoMessage,
   sendCallRequest,
-  sendMediaMessage,
+  sendMediaBatch,
   sendTextMessage,
   updateCallStatus,
-  uploadChatMedia,
-  validateMediaFile,
+  CHAT_LIMITS,
   type CallStatus,
   type ChatContext,
   type ChatMessage,
 } from "@/app/lib/chat";
+import { Button } from '@/components/ui/button';
 
 type ChatConversationProps = {
   context: ChatContext;
@@ -69,6 +69,8 @@ export default function ChatConversation({
   const [text, setText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [hasOlder, setHasOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [selectedLoginId, setSelectedLoginId] = useState<string | null>(null);
   const [call, setCall] = useState<CallState>({
     phase: "idle",
@@ -84,8 +86,8 @@ export default function ChatConversation({
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const reload = useCallback(() => {
-    fetchMessages(context, scopeId)
-      .then(setMessages)
+    return fetchMessages(context, scopeId)
+      .then(next => { setHasOlder(next.length === 50); setMessages(next); })
       .catch((err: Error) => setError(err.message));
   }, [context, scopeId]);
 
@@ -115,19 +117,13 @@ export default function ChatConversation({
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length || isUploading) return;
     event.target.value = "";
-    const fileError = validateMediaFile(file);
-    if (fileError) {
-      setError(fileError);
-      return;
-    }
     setIsUploading(true);
     setError(null);
     try {
-      const url = await uploadChatMedia(context, scopeId, loginId, file);
-      await sendMediaMessage(context, scopeId, loginId, file, url);
+      await sendMediaBatch(context, scopeId, loginId, files);
       await reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "アップロードに失敗しました");
@@ -349,6 +345,12 @@ export default function ChatConversation({
       </header>
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
+        {hasOlder && <Button variant="outline" className="mb-3 w-full" disabled={loadingOlder} onClick={async () => {
+          const first = messages[0]; if (!first) return; setLoadingOlder(true);
+          try { const older = await fetchMessages(context, scopeId, first.createdAt); setMessages(prev => [...older, ...prev]); setHasOlder(older.length === 50); }
+          catch { setError('以前のメッセージを読み込めませんでした'); }
+          finally { setLoadingOlder(false); }
+        }}>{loadingOlder && <Loader2 className="animate-spin" />}以前のメッセージ</Button>}
         {error && (
           <p role="alert" className="mb-3 rounded-xl bg-rose-50 px-4 py-2 text-sm text-rose-700">
             {error}
@@ -389,19 +391,22 @@ export default function ChatConversation({
           <input
             ref={fileInputRef}
             type="file"
+            multiple
             accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
             className="sr-only"
             onChange={handleFileChange}
           />
-          <input
+          <textarea
+            rows={2}
             value={text}
             onChange={(event) => setText(event.target.value)}
             placeholder="メッセージを入力"
-            className="flex-1 rounded-2xl bg-slate-100 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            aria-label="メッセージ"
+            className="min-w-0 flex-1 resize-y rounded-2xl bg-muted px-4 py-2.5 text-sm text-foreground placeholder:text-sub focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button
             type="submit"
-            disabled={isSending || !text.trim()}
+            disabled={isSending || !text.trim() || Array.from(text).length > CHAT_LIMITS.textMax}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-cyan-600 text-white shadow-md active:scale-95 disabled:opacity-50"
           >
             {isSending ? (
@@ -411,6 +416,7 @@ export default function ChatConversation({
             )}
           </button>
         </form>
+        <p className="mt-1 text-right text-xs text-sub">{Array.from(text).length.toLocaleString()}/{CHAT_LIMITS.textMax.toLocaleString()}文字</p>
       </div>
 
       {/* Call type picker */}
@@ -582,10 +588,10 @@ function MessageBubble({
         className={`max-w-[80%] overflow-hidden rounded-2xl ${isOwn ? "bg-cyan-500 text-white" : "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70"}`}
       >
         {msg.mediaUrl && isImageMessage(msg.mediaType) && (
-          <img src={msg.mediaUrl} alt="" className="max-h-60 w-full object-cover" />
+          <img src={msg.mediaUrl} alt="" loading="lazy" decoding="async" className="max-h-60 w-full object-contain" />
         )}
         {msg.mediaUrl && isVideoMessage(msg.mediaType) && (
-          <video src={msg.mediaUrl} controls className="max-h-60 w-full object-cover" />
+          <video src={msg.mediaUrl} controls playsInline preload="none" className="max-h-60 w-full object-contain" />
         )}
         {msg.body && (
           <p className="whitespace-pre-wrap break-words px-3.5 py-2.5 text-sm leading-relaxed">

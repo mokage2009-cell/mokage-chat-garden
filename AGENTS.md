@@ -15,3 +15,6 @@
 - RLS identifies the caller via public.current_login_id(); the owner/admin is the profile with account_number 1.
 - Resolve friendship states symmetrically through shared friendship rules; enforce duplicate prevention and mutual removal in database functions so UI direction cannot change permissions.
 - Preserve conversation_scope_id when recruitment posts are deleted; use the oldest accepted relationship for both participants and merge legacy duplicate scopes in admin history.
+- Feature screens are lazy-loaded within the state-driven home shell to reduce initial downloads without changing navigation.
+- Gallery URLs and media are separate rows sharing a batch ID, so filters and cursor pagination operate on individual items; all signed-in users may read and send, with sender identity enforced by RLS.
+- Chat fetches recent paged history, and shared media rules validate text and batch limits with bounded upload concurrency to avoid loading entire histories or flooding uploads.

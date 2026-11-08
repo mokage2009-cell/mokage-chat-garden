@@ -29,11 +29,12 @@ export const createAccount = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: deleted } = await supabaseAdmin
+    const [{ data: deleted, error: deletedError }, { data: existing, error: existingError }] = await Promise.all([supabaseAdmin
       .from("deleted_user_ids")
       .select("deleted_at")
       .eq("login_id", data.loginId)
-      .maybeSingle();
+      .maybeSingle(), supabaseAdmin.from('profiles').select('login_id').ilike('login_id', data.loginId).maybeSingle()]);
+    if (deletedError || existingError) return { error: 'アカウントを作成できませんでした' };
     if (deleted) {
       const elapsed = Date.now() - new Date(deleted.deleted_at).getTime();
       const day = 24 * 60 * 60 * 1000;
@@ -44,11 +45,6 @@ export const createAccount = createServerFn({ method: "POST" })
       }
     }
 
-    const { data: existing } = await supabaseAdmin
-      .from("profiles")
-      .select("login_id")
-      .ilike("login_id", data.loginId)
-      .maybeSingle();
     if (existing) return { error: "このユーザーIDは既に使われています" };
 
     const { data: created, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -66,11 +62,11 @@ export const createAccount = createServerFn({ method: "POST" })
     }
 
     let accountNumber: number;
-    const { data: ownerRow } = await supabaseAdmin
+    const { data: ownerRow } = data.loginId === OWNER_LOGIN_ID ? await supabaseAdmin
       .from("profiles")
       .select("login_id")
       .eq("account_number", 1)
-      .maybeSingle();
+      .maybeSingle() : { data: null };
     if (data.loginId === OWNER_LOGIN_ID && !ownerRow) {
       accountNumber = 1;
     } else {

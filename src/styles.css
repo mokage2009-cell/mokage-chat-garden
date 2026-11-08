@@ -14,6 +14,8 @@
   --app-subtext: oklch(0.446 0.037 257.28);
   --app-accent: oklch(0.609 0.111 221.72);
   --app-accent-text: oklch(1 0 0);
+  --gallery-bg: oklch(0.97 0.023 164);
+  --gallery-accent: oklch(0.56 0.1 167);
 
   --background: var(--app-bg);
   --foreground: var(--app-text);
@@ -41,6 +43,8 @@
   --color-app: var(--app-bg);
   --color-surface: var(--app-surface);
   --color-sub: var(--app-subtext);
+  --color-gallery: var(--gallery-bg);
+  --color-gallery-accent: var(--gallery-accent);
   --radius-lg: var(--radius);
 
   --animate-screen-in: screen-in 0.4s ease-out both;
@@ -59,6 +63,10 @@
     from { opacity: 0; transform: translateY(24px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
 
 @utility text-app { color: var(--app-text); }
