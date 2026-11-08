@@ -29,6 +29,13 @@
       "when": 1794018359559,
       "tag": "0003_mutual_friendship_and_post_deletion",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794100265672,
+      "tag": "0004_gallery_and_large_chat",
+      "breakpoints": true
     }
   ]
 }

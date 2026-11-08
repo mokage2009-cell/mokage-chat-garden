@@ -284,6 +284,41 @@ export type Database = {
           },
         ]
       }
+      gallery_items: {
+        Row: {
+          batch_id: string
+          created_at: string
+          id: string
+          kind: string
+          sender_login_id: string
+          url: string
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          sender_login_id: string
+          url: string
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          sender_login_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_items_sender_login_id_fkey"
+            columns: ["sender_login_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["login_id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           actor_login_id: string | null
