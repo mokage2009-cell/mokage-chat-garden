@@ -70,8 +70,7 @@ export async function fetchFriendFeed(loginId: string): Promise<FriendFeed> {
       .select(
         "id, author_login_id, title, message, created_at, author:profiles!author_login_id(display_name, avatar_image_url)",
       )
-      .order("created_at", { ascending: false })
-      ,
+      .order("created_at", { ascending: false }),
     supabase.from("friend_requests").select("post_id").eq("applicant_login_id", loginId),
     fetchRelationships(loginId),
   ]);

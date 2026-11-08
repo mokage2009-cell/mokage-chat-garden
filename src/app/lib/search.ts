@@ -42,12 +42,6 @@ type ProfileSearchRow = {
   bio: string;
 };
 
-type RequestRow = {
-  target_login_id: string | null;
-  post_id: string | null;
-  status: string;
-};
-
 export type SearchPage = {
   results: SearchResult[];
   total: number;
